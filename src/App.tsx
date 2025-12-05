@@ -16,6 +16,7 @@ import Students from "./pages/Students";
 import Laptops from "./pages/Laptops";
 import Motorbikes from "./pages/Motorbikes";
 import Components from "./pages/Components";
+import Tuition from "./pages/Tuition";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
@@ -90,6 +91,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Components />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/hoc-phi"
+              element={
+                <ProtectedRoute>
+                  <Tuition />
                 </ProtectedRoute>
               }
             />

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { StatusBadge, StatusType } from "@/components/ui/status-badge";
+import { StatusBadge } from "@/components/ui/status-badge";
 import {
   Table,
   TableBody,
@@ -17,45 +17,52 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Search, Filter, MoreHorizontal, Eye, Edit, Trash2, Plus, Wrench, ExternalLink } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Search, Filter, MoreHorizontal, Eye, Edit, Trash2, Plus, Wrench, ExternalLink, AlertCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
-interface ComponentItem {
-  id: string;
-  type: string;
-  model: string;
-  quantity: number;
-  received: number;
-  price: string;
-  orderLink: string;
-  laptopCode?: string;
-  status: "pending" | "processing" | "received" | "completed";
-  donorName?: string;
-}
-
-const mockComponents: ComponentItem[] = [
-  { id: "1", type: "Pin laptop", model: "Dell E7450 68Wh", quantity: 2, received: 1, price: "450,000đ", orderLink: "https://shopee.vn/...", laptopCode: "LP001, LP003", status: "processing", donorName: "Nguyễn Văn A" },
-  { id: "2", type: "RAM", model: "DDR3L 8GB 1600MHz", quantity: 3, received: 3, price: "350,000đ", orderLink: "https://lazada.vn/...", laptopCode: "LP002", status: "completed" },
-  { id: "3", type: "Ổ cứng SSD", model: "Kingston A400 240GB", quantity: 2, received: 0, price: "550,000đ", orderLink: "https://tiki.vn/...", laptopCode: "LP004", status: "pending" },
-  { id: "4", type: "Màn hình", model: "HP EliteBook 840 G3 14inch", quantity: 1, received: 0, price: "1,200,000đ", orderLink: "https://shopee.vn/...", laptopCode: "LP003", status: "pending" },
-  { id: "5", type: "Bàn phím", model: "ThinkPad X240 US", quantity: 1, received: 1, price: "280,000đ", orderLink: "https://lazada.vn/...", laptopCode: "LP005", status: "received" },
-];
+import { useComponents } from "@/hooks/useInventory";
+import { format } from "date-fns";
+import { vi } from "date-fns/locale";
 
 const statusLabels: Record<string, string> = {
-  pending: "Đang cần",
-  processing: "Có người hỗ trợ",
-  received: "Đã nhận",
-  completed: "Đã lắp đặt",
+  available: "Sẵn sàng",
+  assigned: "Đã phân",
+  delivered: "Đã giao",
+  installed: "Đã lắp",
+};
+
+const statusColors: Record<string, "approved" | "pending" | "rejected"> = {
+  available: "approved",
+  assigned: "pending",
+  delivered: "approved",
+  installed: "approved",
 };
 
 export default function Components() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
 
+  const {
+    data: components = [],
+    isLoading,
+    error,
+  } = useComponents({
+    search: searchTerm,
+    status: statusFilter,
+  });
   const stats = [
-    { label: "Tổng linh kiện", value: mockComponents.length },
-    { label: "Đang cần", value: mockComponents.filter(c => c.status === "pending").length },
-    { label: "Có người hỗ trợ", value: mockComponents.filter(c => c.status === "processing").length },
-    { label: "Đã hoàn thành", value: mockComponents.filter(c => c.status === "completed").length },
+    { label: "Tổng linh kiện", value: components.length },
+    { label: "Sẵn sàng", value: components.filter(c => c.status === "available").length },
+    { label: "Đã phân", value: components.filter(c => c.status === "assigned").length },
+    { label: "Đã lắp", value: components.filter(c => c.status === "installed").length },
   ];
 
   return (
@@ -79,88 +86,117 @@ export default function Components() {
 
       {/* Actions */}
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex gap-2">
-          <div className="relative">
+        <div className="flex gap-2 flex-wrap">
+          <div className="relative flex-1 sm:flex-initial">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Tìm kiếm linh kiện..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-64 pl-9"
+              className="w-full sm:w-64 pl-9"
             />
           </div>
-          <Button variant="outline" size="icon">
-            <Filter className="h-4 w-4" />
-          </Button>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[140px]">
+              <SelectValue placeholder="Trạng thái" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tất cả</SelectItem>
+              <SelectItem value="available">Sẵn sàng</SelectItem>
+              <SelectItem value="assigned">Đã phân</SelectItem>
+              <SelectItem value="delivered">Đã giao</SelectItem>
+              <SelectItem value="installed">Đã lắp</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         <Button>
           <Plus className="mr-2 h-4 w-4" /> Thêm linh kiện
         </Button>
       </div>
 
+      {error && (
+        <Alert variant="destructive" className="mb-6">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Không thể tải dữ liệu linh kiện. Vui lòng thử lại sau.
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Table */}
-      <div className="table-container animate-fade-in">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Loại</TableHead>
-              <TableHead>Mẫu mã</TableHead>
-              <TableHead>Số lượng</TableHead>
-              <TableHead>Giá</TableHead>
-              <TableHead>Laptop</TableHead>
-              <TableHead>Trạng thái</TableHead>
-              <TableHead>Link</TableHead>
-              <TableHead className="w-[50px]"></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {mockComponents.map((comp) => (
-              <TableRow key={comp.id}>
-                <TableCell className="font-medium">{comp.type}</TableCell>
-                <TableCell>{comp.model}</TableCell>
-                <TableCell>{comp.received}/{comp.quantity}</TableCell>
-                <TableCell>{comp.price}</TableCell>
-                <TableCell className="font-mono text-sm">{comp.laptopCode || "-"}</TableCell>
-                <TableCell>
-                  <StatusBadge status={comp.status as StatusType}>
-                    {statusLabels[comp.status]}
-                  </StatusBadge>
-                </TableCell>
-                <TableCell>
-                  <a
-                    href={comp.orderLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-primary hover:underline"
-                  >
-                    Đặt hàng <ExternalLink className="h-3 w-3" />
-                  </a>
-                </TableCell>
-                <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem>
-                        <Eye className="mr-2 h-4 w-4" /> Xem chi tiết
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <Edit className="mr-2 h-4 w-4" /> Chỉnh sửa
-                      </DropdownMenuItem>
-                      <DropdownMenuItem className="text-destructive">
-                        <Trash2 className="mr-2 h-4 w-4" /> Xóa
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
+      {isLoading ? (
+        <div className="space-y-3">
+          {[...Array(5)].map((_, i) => (
+            <Skeleton key={i} className="h-16 w-full" />
+          ))}
+        </div>
+      ) : components.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-12 text-center">
+          <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
+          <p className="text-lg font-medium">Không có linh kiện nào</p>
+          <p className="text-muted-foreground">Chưa có linh kiện nào trong kho hoặc phù hợp với bộ lọc hiện tại</p>
+        </div>
+      ) : (
+        <div className="table-container animate-fade-in">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Loại</TableHead>
+                <TableHead>Hãng</TableHead>
+                <TableHead>Model</TableHead>
+                <TableHead>Người tặng</TableHead>
+                <TableHead>Trạng thái</TableHead>
+                <TableHead>Ghi chú</TableHead>
+                <TableHead>Người nhận</TableHead>
+                <TableHead>Ngày nhận</TableHead>
+                <TableHead className="w-[50px]"></TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+            </TableHeader>
+            <TableBody>
+              {components.map((comp) => (
+                <TableRow key={comp.id}>
+                  <TableCell className="font-medium">{comp.component_type}</TableCell>
+                  <TableCell>{comp.brand || "Chưa cập nhật"}</TableCell>
+                  <TableCell>{comp.model || "Chưa cập nhật"}</TableCell>
+                  <TableCell>{comp.donor_name || "Không xác định"}</TableCell>
+                  <TableCell>
+                    <StatusBadge status={statusColors[comp.status] || "pending"}>
+                      {statusLabels[comp.status] || comp.status}
+                    </StatusBadge>
+                  </TableCell>
+                  <TableCell className="max-w-[200px] truncate">
+                    {comp.notes || comp.condition || "-"}
+                  </TableCell>
+                  <TableCell>{comp.student_name || "-"}</TableCell>
+                  <TableCell>
+                    {format(new Date(comp.received_date), "dd/MM/yyyy", { locale: vi })}
+                  </TableCell>
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem>
+                          <Eye className="mr-2 h-4 w-4" /> Xem chi tiết
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                          <Edit className="mr-2 h-4 w-4" /> Chỉnh sửa
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="text-destructive">
+                          <Trash2 className="mr-2 h-4 w-4" /> Xóa
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
     </MainLayout>
   );
 }

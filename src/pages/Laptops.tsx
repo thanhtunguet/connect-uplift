@@ -2,7 +2,7 @@ import { useState } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { StatusBadge, StatusType } from "@/components/ui/status-badge";
+import { StatusBadge } from "@/components/ui/status-badge";
 import {
   Table,
   TableBody,
@@ -17,44 +17,53 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Search, Filter, MoreHorizontal, Eye, Edit, Trash2, Plus, Laptop } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Search, Filter, MoreHorizontal, Eye, Edit, Trash2, Plus, Laptop, AlertCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
-interface LaptopItem {
-  id: string;
-  code: string;
-  model: string;
-  brand: string;
-  donorName: string;
-  status: "received" | "repairing" | "ready" | "donated";
-  issues?: string;
-  recipientName?: string;
-  donatedAt?: string;
-}
-
-const mockLaptops: LaptopItem[] = [
-  { id: "1", code: "LP001", model: "Latitude E7450", brand: "Dell", donorName: "Nguyễn Văn A", status: "ready", issues: "Đã thay pin mới" },
-  { id: "2", code: "LP002", model: "ThinkPad X240", brand: "Lenovo", donorName: "Trần Thị B", status: "donated", recipientName: "Lê Thị Mai", donatedAt: "2024-01-10" },
-  { id: "3", code: "LP003", model: "EliteBook 840 G3", brand: "HP", donorName: "Lê Văn C", status: "repairing", issues: "Hỏng màn hình, cần thay" },
-  { id: "4", code: "LP004", model: "Inspiron 5558", brand: "Dell", donorName: "Phạm Thị D", status: "received", issues: "Chưa kiểm tra" },
-  { id: "5", code: "LP005", model: "MacBook Air 2015", brand: "Apple", donorName: "Hoàng Văn E", status: "ready" },
-];
+import { useLaptops } from "@/hooks/useInventory";
+import { format } from "date-fns";
+import { vi } from "date-fns/locale";
 
 const statusLabels: Record<string, string> = {
-  received: "Đã nhận",
-  repairing: "Đang sửa",
-  ready: "Sẵn sàng tặng",
-  donated: "Đã tặng",
+  available: "Sẵn sàng",
+  assigned: "Đã phân",
+  delivered: "Đã giao", 
+  needs_repair: "Cần sửa",
+};
+
+const statusColors: Record<string, "approved" | "pending" | "rejected"> = {
+  available: "approved",
+  assigned: "pending",
+  delivered: "approved", 
+  needs_repair: "rejected",
 };
 
 export default function Laptops() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+
+  const {
+    data: laptops = [],
+    isLoading,
+    error,
+  } = useLaptops({
+    search: searchTerm,
+    status: statusFilter,
+  });
 
   const stats = [
-    { label: "Tổng laptop", value: mockLaptops.length, color: "text-foreground" },
-    { label: "Đang sửa", value: mockLaptops.filter(l => l.status === "repairing").length, color: "text-warning" },
-    { label: "Sẵn sàng tặng", value: mockLaptops.filter(l => l.status === "ready").length, color: "text-success" },
-    { label: "Đã tặng", value: mockLaptops.filter(l => l.status === "donated").length, color: "text-secondary" },
+    { label: "Tổng laptop", value: laptops.length, color: "text-foreground" },
+    { label: "Cần sửa", value: laptops.filter(l => l.status === "needs_repair").length, color: "text-warning" },
+    { label: "Sẵn sàng", value: laptops.filter(l => l.status === "available").length, color: "text-success" },
+    { label: "Đã giao", value: laptops.filter(l => l.status === "delivered").length, color: "text-secondary" },
   ];
 
   return (
@@ -78,79 +87,115 @@ export default function Laptops() {
 
       {/* Actions */}
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex gap-2">
-          <div className="relative">
+        <div className="flex gap-2 flex-wrap">
+          <div className="relative flex-1 sm:flex-initial">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Tìm kiếm laptop..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-64 pl-9"
+              className="w-full sm:w-64 pl-9"
             />
           </div>
-          <Button variant="outline" size="icon">
-            <Filter className="h-4 w-4" />
-          </Button>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[140px]">
+              <SelectValue placeholder="Trạng thái" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tất cả</SelectItem>
+              <SelectItem value="available">Sẵn sàng</SelectItem>
+              <SelectItem value="assigned">Đã phân</SelectItem>
+              <SelectItem value="delivered">Đã giao</SelectItem>
+              <SelectItem value="needs_repair">Cần sửa</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         <Button>
           <Plus className="mr-2 h-4 w-4" /> Thêm laptop
         </Button>
       </div>
 
+      {error && (
+        <Alert variant="destructive" className="mb-6">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Không thể tải dữ liệu laptop. Vui lòng thử lại sau.
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Table */}
-      <div className="table-container animate-fade-in">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Mã</TableHead>
-              <TableHead>Model</TableHead>
-              <TableHead>Hãng</TableHead>
-              <TableHead>Người tặng</TableHead>
-              <TableHead>Trạng thái</TableHead>
-              <TableHead>Vấn đề/Ghi chú</TableHead>
-              <TableHead>Người nhận</TableHead>
-              <TableHead className="w-[50px]"></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {mockLaptops.map((laptop) => (
-              <TableRow key={laptop.id}>
-                <TableCell className="font-mono text-sm">{laptop.code}</TableCell>
-                <TableCell className="font-medium">{laptop.model}</TableCell>
-                <TableCell>{laptop.brand}</TableCell>
-                <TableCell>{laptop.donorName}</TableCell>
-                <TableCell>
-                  <StatusBadge status={laptop.status as StatusType}>
-                    {statusLabels[laptop.status]}
-                  </StatusBadge>
-                </TableCell>
-                <TableCell className="max-w-[200px] truncate">{laptop.issues || "-"}</TableCell>
-                <TableCell>{laptop.recipientName || "-"}</TableCell>
-                <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem>
-                        <Eye className="mr-2 h-4 w-4" /> Xem chi tiết
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <Edit className="mr-2 h-4 w-4" /> Chỉnh sửa
-                      </DropdownMenuItem>
-                      <DropdownMenuItem className="text-destructive">
-                        <Trash2 className="mr-2 h-4 w-4" /> Xóa
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
+      {isLoading ? (
+        <div className="space-y-3">
+          {[...Array(5)].map((_, i) => (
+            <Skeleton key={i} className="h-16 w-full" />
+          ))}
+        </div>
+      ) : laptops.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-12 text-center">
+          <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
+          <p className="text-lg font-medium">Không có laptop nào</p>
+          <p className="text-muted-foreground">Chưa có laptop nào trong kho hoặc phù hợp với bộ lọc hiện tại</p>
+        </div>
+      ) : (
+        <div className="table-container animate-fade-in">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Model</TableHead>
+                <TableHead>Hãng</TableHead>
+                <TableHead>Người tặng</TableHead>
+                <TableHead>Trạng thái</TableHead>
+                <TableHead>Ghi chú</TableHead>
+                <TableHead>Người nhận</TableHead>
+                <TableHead>Ngày nhận</TableHead>
+                <TableHead className="w-[50px]"></TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+            </TableHeader>
+            <TableBody>
+              {laptops.map((laptop) => (
+                <TableRow key={laptop.id}>
+                  <TableCell className="font-medium">{laptop.model || "Chưa cập nhật"}</TableCell>
+                  <TableCell>{laptop.brand || "Chưa cập nhật"}</TableCell>
+                  <TableCell>{laptop.donor_name || "Không xác định"}</TableCell>
+                  <TableCell>
+                    <StatusBadge status={statusColors[laptop.status] || "pending"}>
+                      {statusLabels[laptop.status] || laptop.status}
+                    </StatusBadge>
+                  </TableCell>
+                  <TableCell className="max-w-[200px] truncate">
+                    {laptop.notes || laptop.condition || "-"}
+                  </TableCell>
+                  <TableCell>{laptop.student_name || "-"}</TableCell>
+                  <TableCell>
+                    {format(new Date(laptop.received_date), "dd/MM/yyyy", { locale: vi })}
+                  </TableCell>
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem>
+                          <Eye className="mr-2 h-4 w-4" /> Xem chi tiết
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                          <Edit className="mr-2 h-4 w-4" /> Chỉnh sửa
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="text-destructive">
+                          <Trash2 className="mr-2 h-4 w-4" /> Xóa
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
     </MainLayout>
   );
 }

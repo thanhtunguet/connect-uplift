@@ -2,7 +2,7 @@ import { useState } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { StatusBadge, StatusType } from "@/components/ui/status-badge";
+import { StatusBadge } from "@/components/ui/status-badge";
 import {
   Table,
   TableBody,
@@ -17,43 +17,53 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Search, Filter, MoreHorizontal, Eye, Edit, Trash2, Plus, Bike } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Search, Filter, MoreHorizontal, Eye, Edit, Trash2, Plus, Bike, AlertCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
-interface Motorbike {
-  id: string;
-  code: string;
-  type: string;
-  licensePlate?: string;
-  year?: number;
-  donorName: string;
-  status: "received" | "repairing" | "ready" | "donated";
-  condition?: string;
-  recipientName?: string;
-}
-
-const mockMotorbikes: Motorbike[] = [
-  { id: "1", code: "XM001", type: "Honda Wave Alpha", licensePlate: "59-X1 12345", year: 2018, donorName: "Nguyễn Văn A", status: "ready", condition: "Tốt, đã bảo dưỡng" },
-  { id: "2", code: "XM002", type: "Yamaha Sirius", licensePlate: "59-X2 67890", year: 2016, donorName: "Trần Thị B", status: "donated", recipientName: "Phạm Văn Đức" },
-  { id: "3", code: "XM003", type: "Honda Dream", donorName: "Lê Văn C", status: "repairing", condition: "Cần thay lốp và bình ắc quy" },
-  { id: "4", code: "XM004", type: "Suzuki Viva", licensePlate: "59-X3 11111", year: 2015, donorName: "Phạm Thị D", status: "received" },
-];
+import { useMotorbikes } from "@/hooks/useInventory";
+import { format } from "date-fns";
+import { vi } from "date-fns/locale";
 
 const statusLabels: Record<string, string> = {
-  received: "Đã nhận",
-  repairing: "Đang sửa",
-  ready: "Sẵn sàng tặng",
-  donated: "Đã tặng",
+  available: "Sẵn sàng",
+  assigned: "Đã phân",
+  delivered: "Đã giao",
+  needs_repair: "Cần sửa",
+};
+
+const statusColors: Record<string, "approved" | "pending" | "rejected"> = {
+  available: "approved",
+  assigned: "pending",
+  delivered: "approved",
+  needs_repair: "rejected",
 };
 
 export default function Motorbikes() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+
+  const {
+    data: motorbikes = [],
+    isLoading,
+    error,
+  } = useMotorbikes({
+    search: searchTerm,
+    status: statusFilter,
+  });
 
   const stats = [
-    { label: "Tổng xe máy", value: mockMotorbikes.length },
-    { label: "Đang sửa", value: mockMotorbikes.filter(m => m.status === "repairing").length },
-    { label: "Sẵn sàng tặng", value: mockMotorbikes.filter(m => m.status === "ready").length },
-    { label: "Đã tặng", value: mockMotorbikes.filter(m => m.status === "donated").length },
+    { label: "Tổng xe máy", value: motorbikes.length },
+    { label: "Cần sửa", value: motorbikes.filter(m => m.status === "needs_repair").length },
+    { label: "Sẵn sàng", value: motorbikes.filter(m => m.status === "available").length },
+    { label: "Đã giao", value: motorbikes.filter(m => m.status === "delivered").length },
   ];
 
   return (
@@ -77,79 +87,115 @@ export default function Motorbikes() {
 
       {/* Actions */}
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex gap-2">
-          <div className="relative">
+        <div className="flex gap-2 flex-wrap">
+          <div className="relative flex-1 sm:flex-initial">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Tìm kiếm xe máy..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-64 pl-9"
+              className="w-full sm:w-64 pl-9"
             />
           </div>
-          <Button variant="outline" size="icon">
-            <Filter className="h-4 w-4" />
-          </Button>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[140px]">
+              <SelectValue placeholder="Trạng thái" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tất cả</SelectItem>
+              <SelectItem value="available">Sẵn sàng</SelectItem>
+              <SelectItem value="assigned">Đã phân</SelectItem>
+              <SelectItem value="delivered">Đã giao</SelectItem>
+              <SelectItem value="needs_repair">Cần sửa</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         <Button>
           <Plus className="mr-2 h-4 w-4" /> Thêm xe máy
         </Button>
       </div>
 
+      {error && (
+        <Alert variant="destructive" className="mb-6">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Không thể tải dữ liệu xe máy. Vui lòng thử lại sau.
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Table */}
-      <div className="table-container animate-fade-in">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Mã</TableHead>
-              <TableHead>Loại xe</TableHead>
-              <TableHead>Biển số</TableHead>
-              <TableHead>Người tặng</TableHead>
-              <TableHead>Trạng thái</TableHead>
-              <TableHead>Tình trạng</TableHead>
-              <TableHead>Người nhận</TableHead>
-              <TableHead className="w-[50px]"></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {mockMotorbikes.map((bike) => (
-              <TableRow key={bike.id}>
-                <TableCell className="font-mono text-sm">{bike.code}</TableCell>
-                <TableCell className="font-medium">{bike.type}</TableCell>
-                <TableCell>{bike.licensePlate || "-"}</TableCell>
-                <TableCell>{bike.donorName}</TableCell>
-                <TableCell>
-                  <StatusBadge status={bike.status as StatusType}>
-                    {statusLabels[bike.status]}
-                  </StatusBadge>
-                </TableCell>
-                <TableCell className="max-w-[200px] truncate">{bike.condition || "-"}</TableCell>
-                <TableCell>{bike.recipientName || "-"}</TableCell>
-                <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem>
-                        <Eye className="mr-2 h-4 w-4" /> Xem chi tiết
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <Edit className="mr-2 h-4 w-4" /> Chỉnh sửa
-                      </DropdownMenuItem>
-                      <DropdownMenuItem className="text-destructive">
-                        <Trash2 className="mr-2 h-4 w-4" /> Xóa
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
+      {isLoading ? (
+        <div className="space-y-3">
+          {[...Array(5)].map((_, i) => (
+            <Skeleton key={i} className="h-16 w-full" />
+          ))}
+        </div>
+      ) : motorbikes.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-12 text-center">
+          <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
+          <p className="text-lg font-medium">Không có xe máy nào</p>
+          <p className="text-muted-foreground">Chưa có xe máy nào trong kho hoặc phù hợp với bộ lọc hiện tại</p>
+        </div>
+      ) : (
+        <div className="table-container animate-fade-in">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Hãng</TableHead>
+                <TableHead>Model</TableHead>
+                <TableHead>Biển số</TableHead>
+                <TableHead>Năm SX</TableHead>
+                <TableHead>Người tặng</TableHead>
+                <TableHead>Trạng thái</TableHead>
+                <TableHead>Người nhận</TableHead>
+                <TableHead>Ngày nhận</TableHead>
+                <TableHead className="w-[50px]"></TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+            </TableHeader>
+            <TableBody>
+              {motorbikes.map((bike) => (
+                <TableRow key={bike.id}>
+                  <TableCell className="font-medium">{bike.brand || "Chưa cập nhật"}</TableCell>
+                  <TableCell>{bike.model || "Chưa cập nhật"}</TableCell>
+                  <TableCell>{bike.license_plate || "-"}</TableCell>
+                  <TableCell>{bike.year || "-"}</TableCell>
+                  <TableCell>{bike.donor_name || "Không xác định"}</TableCell>
+                  <TableCell>
+                    <StatusBadge status={statusColors[bike.status] || "pending"}>
+                      {statusLabels[bike.status] || bike.status}
+                    </StatusBadge>
+                  </TableCell>
+                  <TableCell>{bike.student_name || "-"}</TableCell>
+                  <TableCell>
+                    {format(new Date(bike.received_date), "dd/MM/yyyy", { locale: vi })}
+                  </TableCell>
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem>
+                          <Eye className="mr-2 h-4 w-4" /> Xem chi tiết
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                          <Edit className="mr-2 h-4 w-4" /> Chỉnh sửa
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="text-destructive">
+                          <Trash2 className="mr-2 h-4 w-4" /> Xóa
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
     </MainLayout>
   );
 }

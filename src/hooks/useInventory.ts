@@ -1,0 +1,476 @@
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+
+// ============================================
+// LAPTOP INVENTORY
+// ============================================
+
+export interface LaptopData {
+  id: string;
+  donor_id: string | null;
+  student_id: string | null;
+  brand: string | null;
+  model: string | null;
+  specifications: string | null;
+  condition: string | null;
+  notes: string | null;
+  status: string;
+  received_date: string;
+  assigned_date: string | null;
+  delivered_date: string | null;
+  created_at: string;
+  updated_at: string;
+  // Joined data
+  donor_name?: string;
+  student_name?: string;
+}
+
+interface InventoryFilters {
+  search?: string;
+  status?: string | "all";
+  donorId?: string;
+  studentId?: string;
+}
+
+export function useLaptops(filters: InventoryFilters = {}) {
+  return useQuery({
+    queryKey: ["laptops", filters],
+    queryFn: async () => {
+      let query = supabase
+        .from("laptops")
+        .select(`
+          *,
+          donors:donor_id(full_name),
+          students:student_id(full_name)
+        `)
+        .order("created_at", { ascending: false });
+
+      // Apply status filter
+      if (filters.status && filters.status !== "all") {
+        query = query.eq("status", filters.status);
+      }
+
+      // Apply search filter
+      if (filters.search && filters.search.trim()) {
+        const searchTerm = `%${filters.search.trim()}%`;
+        query = query.or(
+          `brand.ilike.${searchTerm},model.ilike.${searchTerm},specifications.ilike.${searchTerm},notes.ilike.${searchTerm}`
+        );
+      }
+
+      // Apply donor filter
+      if (filters.donorId) {
+        query = query.eq("donor_id", filters.donorId);
+      }
+
+      // Apply student filter
+      if (filters.studentId) {
+        query = query.eq("student_id", filters.studentId);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error("Error fetching laptops:", error);
+        throw error;
+      }
+
+      // Transform data to include donor and student names
+      return data.map((laptop: any) => ({
+        ...laptop,
+        donor_name: laptop.donors?.full_name || null,
+        student_name: laptop.students?.full_name || null,
+      })) as LaptopData[];
+    },
+  });
+}
+
+export function useLaptop(id: string | null) {
+  return useQuery({
+    queryKey: ["laptop", id],
+    queryFn: async () => {
+      if (!id) return null;
+
+      const { data, error } = await supabase
+        .from("laptops")
+        .select(`
+          *,
+          donors:donor_id(full_name),
+          students:student_id(full_name)
+        `)
+        .eq("id", id)
+        .single();
+
+      if (error) {
+        console.error("Error fetching laptop:", error);
+        throw error;
+      }
+
+      return {
+        ...data,
+        donor_name: data.donors?.full_name || null,
+        student_name: data.students?.full_name || null,
+      } as LaptopData;
+    },
+    enabled: !!id,
+  });
+}
+
+export function useUpdateLaptop() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, updates }: { id: string; updates: Partial<LaptopData> }) => {
+      const { data, error } = await supabase
+        .from("laptops")
+        .update({
+          ...updates,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error("Error updating laptop:", error);
+        throw error;
+      }
+
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["laptops"] });
+      queryClient.invalidateQueries({ queryKey: ["laptop"] });
+      toast.success("Cập nhật laptop thành công");
+    },
+    onError: (error) => {
+      console.error("Error updating laptop:", error);
+      toast.error("Có lỗi xảy ra khi cập nhật laptop");
+    },
+  });
+}
+
+// ============================================
+// MOTORBIKE INVENTORY
+// ============================================
+
+export interface MotorbikeData {
+  id: string;
+  donor_id: string | null;
+  student_id: string | null;
+  brand: string | null;
+  model: string | null;
+  year: number | null;
+  license_plate: string | null;
+  condition: string | null;
+  notes: string | null;
+  status: string;
+  received_date: string;
+  assigned_date: string | null;
+  delivered_date: string | null;
+  created_at: string;
+  updated_at: string;
+  // Joined data
+  donor_name?: string;
+  student_name?: string;
+}
+
+export function useMotorbikes(filters: InventoryFilters = {}) {
+  return useQuery({
+    queryKey: ["motorbikes", filters],
+    queryFn: async () => {
+      let query = supabase
+        .from("motorbikes")
+        .select(`
+          *,
+          donors:donor_id(full_name),
+          students:student_id(full_name)
+        `)
+        .order("created_at", { ascending: false });
+
+      // Apply status filter
+      if (filters.status && filters.status !== "all") {
+        query = query.eq("status", filters.status);
+      }
+
+      // Apply search filter
+      if (filters.search && filters.search.trim()) {
+        const searchTerm = `%${filters.search.trim()}%`;
+        query = query.or(
+          `brand.ilike.${searchTerm},model.ilike.${searchTerm},license_plate.ilike.${searchTerm},notes.ilike.${searchTerm}`
+        );
+      }
+
+      if (filters.donorId) {
+        query = query.eq("donor_id", filters.donorId);
+      }
+
+      if (filters.studentId) {
+        query = query.eq("student_id", filters.studentId);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error("Error fetching motorbikes:", error);
+        throw error;
+      }
+
+      return data.map((motorbike: any) => ({
+        ...motorbike,
+        donor_name: motorbike.donors?.full_name || null,
+        student_name: motorbike.students?.full_name || null,
+      })) as MotorbikeData[];
+    },
+  });
+}
+
+export function useUpdateMotorbike() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, updates }: { id: string; updates: Partial<MotorbikeData> }) => {
+      const { data, error } = await supabase
+        .from("motorbikes")
+        .update({
+          ...updates,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error("Error updating motorbike:", error);
+        throw error;
+      }
+
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["motorbikes"] });
+      toast.success("Cập nhật xe máy thành công");
+    },
+    onError: (error) => {
+      console.error("Error updating motorbike:", error);
+      toast.error("Có lỗi xảy ra khi cập nhật xe máy");
+    },
+  });
+}
+
+// ============================================
+// COMPONENTS INVENTORY
+// ============================================
+
+export interface ComponentData {
+  id: string;
+  donor_id: string | null;
+  student_id: string | null;
+  component_type: string;
+  brand: string | null;
+  model: string | null;
+  specifications: string | null;
+  condition: string | null;
+  notes: string | null;
+  status: string;
+  received_date: string;
+  assigned_date: string | null;
+  delivered_date: string | null;
+  created_at: string;
+  updated_at: string;
+  // Joined data
+  donor_name?: string;
+  student_name?: string;
+}
+
+export function useComponents(filters: InventoryFilters = {}) {
+  return useQuery({
+    queryKey: ["components", filters],
+    queryFn: async () => {
+      let query = supabase
+        .from("components")
+        .select(`
+          *,
+          donors:donor_id(full_name),
+          students:student_id(full_name)
+        `)
+        .order("created_at", { ascending: false });
+
+      // Apply status filter
+      if (filters.status && filters.status !== "all") {
+        query = query.eq("status", filters.status);
+      }
+
+      // Apply search filter
+      if (filters.search && filters.search.trim()) {
+        const searchTerm = `%${filters.search.trim()}%`;
+        query = query.or(
+          `component_type.ilike.${searchTerm},brand.ilike.${searchTerm},model.ilike.${searchTerm},specifications.ilike.${searchTerm},notes.ilike.${searchTerm}`
+        );
+      }
+
+      if (filters.donorId) {
+        query = query.eq("donor_id", filters.donorId);
+      }
+
+      if (filters.studentId) {
+        query = query.eq("student_id", filters.studentId);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error("Error fetching components:", error);
+        throw error;
+      }
+
+      return data.map((component: any) => ({
+        ...component,
+        donor_name: component.donors?.full_name || null,
+        student_name: component.students?.full_name || null,
+      })) as ComponentData[];
+    },
+  });
+}
+
+export function useUpdateComponent() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, updates }: { id: string; updates: Partial<ComponentData> }) => {
+      const { data, error } = await supabase
+        .from("components")
+        .update({
+          ...updates,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error("Error updating component:", error);
+        throw error;
+      }
+
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["components"] });
+      toast.success("Cập nhật linh kiện thành công");
+    },
+    onError: (error) => {
+      console.error("Error updating component:", error);
+      toast.error("Có lỗi xảy ra khi cập nhật linh kiện");
+    },
+  });
+}
+
+// ============================================
+// TUITION SUPPORT
+// ============================================
+
+export interface TuitionSupportData {
+  id: string;
+  donor_id: string | null;
+  student_id: string | null;
+  amount: number;
+  frequency: string;
+  academic_year: string | null;
+  semester: number | null;
+  notes: string | null;
+  status: string;
+  pledged_date: string;
+  paid_date: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  created_at: string;
+  updated_at: string;
+  // Joined data
+  donor_name?: string;
+  student_name?: string;
+}
+
+export function useTuitionSupport(filters: InventoryFilters = {}) {
+  return useQuery({
+    queryKey: ["tuition-support", filters],
+    queryFn: async () => {
+      let query = supabase
+        .from("tuition_support")
+        .select(`
+          *,
+          donors:donor_id(full_name),
+          students:student_id(full_name)
+        `)
+        .order("created_at", { ascending: false });
+
+      // Apply status filter
+      if (filters.status && filters.status !== "all") {
+        query = query.eq("status", filters.status);
+      }
+
+      // Apply search filter
+      if (filters.search && filters.search.trim()) {
+        const searchTerm = `%${filters.search.trim()}%`;
+        query = query.or(
+          `notes.ilike.${searchTerm},academic_year.ilike.${searchTerm}`
+        );
+      }
+
+      if (filters.donorId) {
+        query = query.eq("donor_id", filters.donorId);
+      }
+
+      if (filters.studentId) {
+        query = query.eq("student_id", filters.studentId);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error("Error fetching tuition support:", error);
+        throw error;
+      }
+
+      return data.map((tuition: any) => ({
+        ...tuition,
+        donor_name: tuition.donors?.full_name || null,
+        student_name: tuition.students?.full_name || null,
+      })) as TuitionSupportData[];
+    },
+  });
+}
+
+export function useUpdateTuitionSupport() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, updates }: { id: string; updates: Partial<TuitionSupportData> }) => {
+      const { data, error } = await supabase
+        .from("tuition_support")
+        .update({
+          ...updates,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error("Error updating tuition support:", error);
+        throw error;
+      }
+
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tuition-support"] });
+      toast.success("Cập nhật hỗ trợ học phí thành công");
+    },
+    onError: (error) => {
+      console.error("Error updating tuition support:", error);
+      toast.error("Có lỗi xảy ra khi cập nhật hỗ trợ học phí");
+    },
+  });
+}
