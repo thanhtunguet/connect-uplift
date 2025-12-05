@@ -5,6 +5,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import PublicHome from "./pages/PublicHome";
+import PublicDonorRegistration from "./pages/PublicDonorRegistration";
+import PublicStudentRegistration from "./pages/PublicStudentRegistration";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Applications from "./pages/Applications";
@@ -27,9 +30,15 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <Routes>
+            {/* Public Routes - No authentication required */}
+            <Route path="/" element={<PublicHome />} />
+            <Route path="/dang-ky-nha-hao-tam" element={<PublicDonorRegistration />} />
+            <Route path="/dang-ky-sinh-vien" element={<PublicStudentRegistration />} />
             <Route path="/auth" element={<Auth />} />
+
+            {/* Admin Routes - Authentication required */}
             <Route
-              path="/"
+              path="/admin"
               element={
                 <ProtectedRoute>
                   <Index />

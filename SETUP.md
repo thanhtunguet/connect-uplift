@@ -61,26 +61,38 @@ npm run dev
 
 ## Kiểm tra các tính năng đã triển khai
 
-### 1. Đăng ký Nhà hảo tâm
-1. Đăng nhập vào hệ thống (tạo account qua trang /auth)
-2. Vào trang "Đơn đăng ký" (/don-dang-ky)
-3. Chọn tab "Nhà hảo tâm"
-4. Click nút "Thêm mới"
-5. Điền form đăng ký với các thông tin:
+### 1. Trang chủ công khai (/)
+- Không yêu cầu đăng nhập
+- Hiển thị thông tin dự án
+- Có link đến form đăng ký cho nhà hảo tâm và sinh viên
+- Link đăng nhập cho admin
+
+### 2. Đăng ký Nhà hảo tâm (Công khai - không cần đăng nhập)
+1. Vào trang chủ (/) hoặc truy cập trực tiếp (/dang-ky-nha-hao-tam)
+2. Click "Đăng ký nhà hảo tâm"
+3. Điền form đăng ký với các thông tin:
    - Thông tin liên hệ: Họ tên, năm sinh, SĐT, địa chỉ, Facebook
    - Khả năng hỗ trợ: Chọn loại hỗ trợ (Laptop/Xe máy/Linh kiện/Học phí)
    - Mức độ: Một lần hoặc Định kỳ
-6. Submit form
+4. Submit form
+5. Nhận thông báo thành công
 
-### 2. Đăng ký Sinh viên
-1. Vào trang "Đơn đăng ký" (/don-dang-ky)
-2. Chọn tab "Sinh viên"
-3. Click nút "Thêm mới"
-4. Điền form đăng ký với các thông tin:
+### 3. Đăng ký Sinh viên (Công khai - không cần đăng nhập)
+1. Vào trang chủ (/) hoặc truy cập trực tiếp (/dang-ky-sinh-vien)
+2. Click "Đăng ký sinh viên"
+3. Điền form đăng ký với các thông tin:
    - Thông tin liên hệ: Họ tên, năm sinh, SĐT, địa chỉ, Facebook
    - Thông tin sinh viên: Năm học (1-4), hoàn cảnh khó khăn
    - Nhu cầu: Chọn các loại hỗ trợ cần (Laptop/Xe máy/Học phí/Linh kiện)
-5. Submit form
+4. Submit form
+5. Nhận thông báo thành công
+
+### 4. Quản lý đơn đăng ký (Admin - yêu cầu đăng nhập)
+1. Đăng nhập qua trang /auth
+2. Sau khi đăng nhập, tự động chuyển đến /admin (Dashboard)
+3. Vào trang "Đơn đăng ký" (/don-dang-ky)
+4. Xem danh sách đơn từ nhà hảo tâm và sinh viên
+5. Có thể thêm đơn mới thông qua nút "Thêm mới" (trong admin panel)
 
 ## Cấu trúc Database đã tạo
 
@@ -98,15 +110,40 @@ npm run dev
 - **support_frequency**: one_time, recurring
 - **academic_year**: 1, 2, 3, 4
 
+## Cấu trúc ứng dụng
+
+### Public Routes (Không cần đăng nhập)
+- `/` - Trang chủ công khai
+- `/dang-ky-nha-hao-tam` - Form đăng ký nhà hảo tâm
+- `/dang-ky-sinh-vien` - Form đăng ký sinh viên
+- `/auth` - Trang đăng nhập (chỉ cho admin)
+
+### Admin Routes (Yêu cầu đăng nhập)
+- `/admin` - Dashboard tổng quan
+- `/don-dang-ky` - Quản lý đơn đăng ký
+- `/nha-hao-tam` - Quản lý nhà hảo tâm
+- `/sinh-vien` - Quản lý sinh viên
+- `/laptop` - Quản lý laptop
+- `/xe-may` - Quản lý xe máy
+- `/linh-kien` - Quản lý linh kiện
+- `/bao-cao` - Báo cáo và thống kê
+- `/cai-dat` - Cài đặt
+
 ## Tính năng đã hoàn thành
 
 ✅ Database schema cho đơn đăng ký nhà hảo tâm và sinh viên
+✅ Database policies cho phép public registration (không cần đăng nhập)
 ✅ Form đăng ký nhà hảo tâm với validation
 ✅ Form đăng ký sinh viên với validation
-✅ Tích hợp forms vào trang Applications với Dialog
-✅ Responsive UI
+✅ Trang chủ công khai với giới thiệu dự án
+✅ Trang đăng ký công khai cho nhà hảo tâm
+✅ Trang đăng ký công khai cho sinh viên
+✅ Success screens sau khi đăng ký
+✅ Tích hợp forms vào admin panel với Dialog
+✅ Responsive UI cho cả public và admin
 ✅ Form validation với Zod
 ✅ Toast notifications khi submit thành công/thất bại
+✅ Phân quyền: Public có thể đăng ký, chỉ Admin mới quản lý
 
 ## Tính năng tiếp theo cần phát triển
 
@@ -125,5 +162,9 @@ npm run dev
 
 - Form validation đã được cài đặt đầy đủ theo requirements
 - Tất cả đơn đăng ký mặc định có status là "pending"
-- RLS (Row Level Security) đã được bật, hiện tại cho phép tất cả authenticated users
+- RLS (Row Level Security) đã được bật:
+  - Public (không đăng nhập) có thể INSERT vào bảng applications
+  - Chỉ authenticated users (admin) mới có thể SELECT và UPDATE applications
+- Form đăng ký là public, không cần authentication
+- Admin panel yêu cầu authentication để quản lý
 - Cần cấu hình admin role riêng trong production để hạn chế quyền truy cập

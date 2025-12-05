@@ -34,7 +34,7 @@ export default function Auth() {
   const location = useLocation();
   const { toast } = useToast();
 
-  const from = location.state?.from?.pathname || "/";
+  const from = location.state?.from?.pathname || "/admin";
 
   useEffect(() => {
     if (user) {

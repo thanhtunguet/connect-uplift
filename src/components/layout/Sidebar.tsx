@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/sidebar";
 
 const navigation = [
-  { name: "Tổng quan", href: "/", icon: LayoutDashboard },
+  { name: "Tổng quan", href: "/admin", icon: LayoutDashboard },
   { name: "Đơn đăng ký", href: "/don-dang-ky", icon: FileText },
   { name: "Nhà hảo tâm", href: "/nha-hao-tam", icon: Heart },
   { name: "Sinh viên", href: "/sinh-vien", icon: GraduationCap },
