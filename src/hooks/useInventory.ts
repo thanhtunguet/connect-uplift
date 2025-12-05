@@ -31,12 +31,58 @@ interface InventoryFilters {
   status?: string | "all";
   donorId?: string;
   studentId?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+interface LaptopsResult {
+  data: LaptopData[];
+  totalCount: number;
+  totalPages: number;
 }
 
 export function useLaptops(filters: InventoryFilters = {}) {
   return useQuery({
     queryKey: ["laptops", filters],
-    queryFn: async () => {
+    queryFn: async (): Promise<LaptopsResult> => {
+      const { page = 1, pageSize = 10 } = filters;
+      
+      // First, get count for total items
+      let countQuery = supabase
+        .from("laptops")
+        .select("*", { count: "exact", head: true });
+
+      // Apply status filter to count query
+      if (filters.status && filters.status !== "all") {
+        countQuery = countQuery.eq("status", filters.status);
+      }
+
+      // Apply search filter to count query
+      if (filters.search && filters.search.trim()) {
+        const searchTerm = `%${filters.search.trim()}%`;
+        countQuery = countQuery.or(
+          `brand.ilike.${searchTerm},model.ilike.${searchTerm},specifications.ilike.${searchTerm},notes.ilike.${searchTerm}`
+        );
+      }
+
+      // Apply donor filter to count query
+      if (filters.donorId) {
+        countQuery = countQuery.eq("donor_id", filters.donorId);
+      }
+
+      // Apply student filter to count query
+      if (filters.studentId) {
+        countQuery = countQuery.eq("student_id", filters.studentId);
+      }
+
+      const { count, error: countError } = await countQuery;
+
+      if (countError) {
+        console.error("Error fetching laptops count:", countError);
+        throw countError;
+      }
+
+      // Now get the actual data with pagination
       let query = supabase
         .from("laptops")
         .select(`
@@ -69,6 +115,11 @@ export function useLaptops(filters: InventoryFilters = {}) {
         query = query.eq("student_id", filters.studentId);
       }
 
+      // Apply pagination
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+      query = query.range(from, to);
+
       const { data, error } = await query;
 
       if (error) {
@@ -77,11 +128,20 @@ export function useLaptops(filters: InventoryFilters = {}) {
       }
 
       // Transform data to include donor and student names
-      return data.map((laptop: any) => ({
+      const transformedData = data.map((laptop: any) => ({
         ...laptop,
         donor_name: laptop.donors?.full_name || null,
         student_name: laptop.students?.full_name || null,
       })) as LaptopData[];
+
+      const totalCount = count || 0;
+      const totalPages = Math.ceil(totalCount / pageSize);
+
+      return {
+        data: transformedData,
+        totalCount,
+        totalPages,
+      };
     },
   });
 }
@@ -209,10 +269,52 @@ export interface MotorbikeData {
   student_name?: string;
 }
 
+interface MotorbikesResult {
+  data: MotorbikeData[];
+  totalCount: number;
+  totalPages: number;
+}
+
 export function useMotorbikes(filters: InventoryFilters = {}) {
   return useQuery({
     queryKey: ["motorbikes", filters],
-    queryFn: async () => {
+    queryFn: async (): Promise<MotorbikesResult> => {
+      const { page = 1, pageSize = 10 } = filters;
+      
+      // First, get count for total items
+      let countQuery = supabase
+        .from("motorbikes")
+        .select("*", { count: "exact", head: true });
+
+      // Apply status filter to count query
+      if (filters.status && filters.status !== "all") {
+        countQuery = countQuery.eq("status", filters.status);
+      }
+
+      // Apply search filter to count query
+      if (filters.search && filters.search.trim()) {
+        const searchTerm = `%${filters.search.trim()}%`;
+        countQuery = countQuery.or(
+          `brand.ilike.${searchTerm},model.ilike.${searchTerm},license_plate.ilike.${searchTerm},notes.ilike.${searchTerm}`
+        );
+      }
+
+      if (filters.donorId) {
+        countQuery = countQuery.eq("donor_id", filters.donorId);
+      }
+
+      if (filters.studentId) {
+        countQuery = countQuery.eq("student_id", filters.studentId);
+      }
+
+      const { count, error: countError } = await countQuery;
+
+      if (countError) {
+        console.error("Error fetching motorbikes count:", countError);
+        throw countError;
+      }
+
+      // Now get the actual data with pagination
       let query = supabase
         .from("motorbikes")
         .select(`
@@ -243,6 +345,11 @@ export function useMotorbikes(filters: InventoryFilters = {}) {
         query = query.eq("student_id", filters.studentId);
       }
 
+      // Apply pagination
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+      query = query.range(from, to);
+
       const { data, error } = await query;
 
       if (error) {
@@ -250,11 +357,20 @@ export function useMotorbikes(filters: InventoryFilters = {}) {
         throw error;
       }
 
-      return data.map((motorbike: any) => ({
+      const transformedData = data.map((motorbike: any) => ({
         ...motorbike,
         donor_name: motorbike.donors?.full_name || null,
         student_name: motorbike.students?.full_name || null,
       })) as MotorbikeData[];
+
+      const totalCount = count || 0;
+      const totalPages = Math.ceil(totalCount / pageSize);
+
+      return {
+        data: transformedData,
+        totalCount,
+        totalPages,
+      };
     },
   });
 }
@@ -350,10 +466,52 @@ export interface ComponentData {
   student_name?: string;
 }
 
+interface ComponentsResult {
+  data: ComponentData[];
+  totalCount: number;
+  totalPages: number;
+}
+
 export function useComponents(filters: InventoryFilters = {}) {
   return useQuery({
     queryKey: ["components", filters],
-    queryFn: async () => {
+    queryFn: async (): Promise<ComponentsResult> => {
+      const { page = 1, pageSize = 10 } = filters;
+      
+      // First, get count for total items
+      let countQuery = supabase
+        .from("components")
+        .select("*", { count: "exact", head: true });
+
+      // Apply status filter to count query
+      if (filters.status && filters.status !== "all") {
+        countQuery = countQuery.eq("status", filters.status);
+      }
+
+      // Apply search filter to count query
+      if (filters.search && filters.search.trim()) {
+        const searchTerm = `%${filters.search.trim()}%`;
+        countQuery = countQuery.or(
+          `component_type.ilike.${searchTerm},brand.ilike.${searchTerm},model.ilike.${searchTerm},specifications.ilike.${searchTerm},notes.ilike.${searchTerm}`
+        );
+      }
+
+      if (filters.donorId) {
+        countQuery = countQuery.eq("donor_id", filters.donorId);
+      }
+
+      if (filters.studentId) {
+        countQuery = countQuery.eq("student_id", filters.studentId);
+      }
+
+      const { count, error: countError } = await countQuery;
+
+      if (countError) {
+        console.error("Error fetching components count:", countError);
+        throw countError;
+      }
+
+      // Now get the actual data with pagination
       let query = supabase
         .from("components")
         .select(`
@@ -384,6 +542,11 @@ export function useComponents(filters: InventoryFilters = {}) {
         query = query.eq("student_id", filters.studentId);
       }
 
+      // Apply pagination
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+      query = query.range(from, to);
+
       const { data, error } = await query;
 
       if (error) {
@@ -391,11 +554,20 @@ export function useComponents(filters: InventoryFilters = {}) {
         throw error;
       }
 
-      return data.map((component: any) => ({
+      const transformedData = data.map((component: any) => ({
         ...component,
         donor_name: component.donors?.full_name || null,
         student_name: component.students?.full_name || null,
       })) as ComponentData[];
+
+      const totalCount = count || 0;
+      const totalPages = Math.ceil(totalCount / pageSize);
+
+      return {
+        data: transformedData,
+        totalCount,
+        totalPages,
+      };
     },
   });
 }
@@ -491,10 +663,52 @@ export interface TuitionSupportData {
   student_name?: string;
 }
 
+interface TuitionSupportResult {
+  data: TuitionSupportData[];
+  totalCount: number;
+  totalPages: number;
+}
+
 export function useTuitionSupport(filters: InventoryFilters = {}) {
   return useQuery({
     queryKey: ["tuition-support", filters],
-    queryFn: async () => {
+    queryFn: async (): Promise<TuitionSupportResult> => {
+      const { page = 1, pageSize = 10 } = filters;
+      
+      // First, get count for total items
+      let countQuery = supabase
+        .from("tuition_support")
+        .select("*", { count: "exact", head: true });
+
+      // Apply status filter to count query
+      if (filters.status && filters.status !== "all") {
+        countQuery = countQuery.eq("status", filters.status);
+      }
+
+      // Apply search filter to count query
+      if (filters.search && filters.search.trim()) {
+        const searchTerm = `%${filters.search.trim()}%`;
+        countQuery = countQuery.or(
+          `notes.ilike.${searchTerm},academic_year.ilike.${searchTerm}`
+        );
+      }
+
+      if (filters.donorId) {
+        countQuery = countQuery.eq("donor_id", filters.donorId);
+      }
+
+      if (filters.studentId) {
+        countQuery = countQuery.eq("student_id", filters.studentId);
+      }
+
+      const { count, error: countError } = await countQuery;
+
+      if (countError) {
+        console.error("Error fetching tuition support count:", countError);
+        throw countError;
+      }
+
+      // Now get the actual data with pagination
       let query = supabase
         .from("tuition_support")
         .select(`
@@ -525,6 +739,11 @@ export function useTuitionSupport(filters: InventoryFilters = {}) {
         query = query.eq("student_id", filters.studentId);
       }
 
+      // Apply pagination
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+      query = query.range(from, to);
+
       const { data, error } = await query;
 
       if (error) {
@@ -532,11 +751,20 @@ export function useTuitionSupport(filters: InventoryFilters = {}) {
         throw error;
       }
 
-      return data.map((tuition: any) => ({
+      const transformedData = data.map((tuition: any) => ({
         ...tuition,
         donor_name: tuition.donors?.full_name || null,
         student_name: tuition.students?.full_name || null,
       })) as TuitionSupportData[];
+
+      const totalCount = count || 0;
+      const totalPages = Math.ceil(totalCount / pageSize);
+
+      return {
+        data: transformedData,
+        totalCount,
+        totalPages,
+      };
     },
   });
 }

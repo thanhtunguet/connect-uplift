@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { StatusBadge } from "@/components/ui/status-badge";
+import { DataPagination } from "@/components/ui/data-pagination";
 import {
   Table,
   TableBody,
@@ -41,6 +42,7 @@ import { Search, MoreHorizontal, Eye, Edit, Trash2, GraduationCap, AlertCircle, 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StudentDetailDialog } from "@/components/students/StudentDetailDialog";
 import { useStudents, useMarkReceived, useDeleteStudent } from "@/hooks/useStudents";
+import { usePagination } from "@/hooks/usePagination";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
 import { 
@@ -60,8 +62,10 @@ export default function Students() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [studentToDelete, setStudentToDelete] = useState<{ id: string; name: string } | null>(null);
 
+  const pagination = usePagination({ initialPageSize: 10 });
+
   const {
-    data: students = [],
+    data: studentsResult,
     isLoading,
     error,
   } = useStudents({
@@ -69,7 +73,13 @@ export default function Students() {
     academicYear: academicYearFilter,
     needType: needTypeFilter,
     receivedStatus: receivedFilter,
+    page: pagination.page,
+    pageSize: pagination.pageSize,
   });
+
+  const students = studentsResult?.data || [];
+  const totalCount = studentsResult?.totalCount || 0;
+  const totalPages = studentsResult?.totalPages || 0;
 
   const markReceivedMutation = useMarkReceived();
   const deleteMutation = useDeleteStudent();
@@ -96,11 +106,11 @@ export default function Students() {
       );
     });
     return [
-      { label: "Tổng sinh viên", value: students.length, icon: GraduationCap },
+      { label: "Tổng sinh viên", value: totalCount, icon: GraduationCap },
       { label: "Đã nhận đầy đủ", value: receivedFull.length, icon: CheckCircle },
       { label: "Chưa nhận hỗ trợ", value: notReceived.length, icon: AlertCircle },
     ];
-  }, [students]);
+  }, [students, totalCount]);
 
   const handleViewDetails = (id: string) => {
     setSelectedStudentId(id);
@@ -317,6 +327,20 @@ export default function Students() {
               })}
             </TableBody>
           </Table>
+        </div>
+      )}
+
+      {/* Pagination */}
+      {!isLoading && students.length > 0 && (
+        <div className="mt-6">
+          <DataPagination
+            currentPage={pagination.page}
+            totalPages={totalPages}
+            pageSize={pagination.pageSize}
+            totalItems={totalCount}
+            onPageChange={pagination.setPage}
+            onPageSizeChange={pagination.setPageSize}
+          />
         </div>
       )}
 

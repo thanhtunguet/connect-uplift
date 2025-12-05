@@ -30,12 +30,55 @@ interface DonorFilters {
   supportType?: string | "all";
   frequency?: string | "all";
   isActive?: boolean | "all";
+  page?: number;
+  pageSize?: number;
+}
+
+interface DonorsResult {
+  data: DonorData[];
+  totalCount: number;
+  totalPages: number;
 }
 
 export function useDonors(filters: DonorFilters = {}) {
   return useQuery({
     queryKey: ["donors", filters],
-    queryFn: async () => {
+    queryFn: async (): Promise<DonorsResult> => {
+      const { page = 1, pageSize = 10 } = filters;
+      
+      // First, get count for total items
+      let countQuery = supabase
+        .from("donors")
+        .select("*", { count: "exact", head: true });
+
+      // Apply filters to count query
+      if (filters.search && filters.search.trim()) {
+        const searchTerm = `%${filters.search.trim()}%`;
+        countQuery = countQuery.or(
+          `full_name.ilike.${searchTerm},phone.ilike.${searchTerm},facebook_link.ilike.${searchTerm}`
+        );
+      }
+
+      if (filters.supportType && filters.supportType !== "all") {
+        countQuery = countQuery.contains("support_types", [filters.supportType]);
+      }
+
+      if (filters.frequency && filters.frequency !== "all") {
+        countQuery = countQuery.eq("support_frequency", filters.frequency);
+      }
+
+      if (typeof filters.isActive === "boolean") {
+        countQuery = countQuery.eq("is_active", filters.isActive);
+      }
+
+      const { count, error: countError } = await countQuery;
+
+      if (countError) {
+        console.error("Error fetching donors count:", countError);
+        throw countError;
+      }
+
+      // Now get the actual data with pagination
       let query = supabase
         .from("donors")
         .select("*")
@@ -64,6 +107,11 @@ export function useDonors(filters: DonorFilters = {}) {
         query = query.eq("is_active", filters.isActive);
       }
 
+      // Apply pagination
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+      query = query.range(from, to);
+
       const { data, error } = await query;
 
       if (error) {
@@ -71,7 +119,14 @@ export function useDonors(filters: DonorFilters = {}) {
         throw error;
       }
 
-      return data as DonorData[];
+      const totalCount = count || 0;
+      const totalPages = Math.ceil(totalCount / pageSize);
+
+      return {
+        data: data as DonorData[],
+        totalCount,
+        totalPages,
+      };
     },
   });
 }

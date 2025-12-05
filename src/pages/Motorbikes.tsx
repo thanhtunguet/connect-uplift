@@ -27,9 +27,11 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { DataPagination } from "@/components/ui/data-pagination";
 import { Search, Filter, MoreHorizontal, Eye, Edit, Trash2, Plus, Bike, AlertCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useMotorbikes } from "@/hooks/useInventory";
+import { usePagination } from "@/hooks/usePagination";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
 
@@ -52,17 +54,25 @@ export default function Motorbikes() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
+  const pagination = usePagination({ initialPageSize: 10 });
+
   const {
-    data: motorbikes = [],
+    data: motorbikesResult,
     isLoading,
     error,
   } = useMotorbikes({
     search: searchTerm,
     status: statusFilter,
+    page: pagination.page,
+    pageSize: pagination.pageSize,
   });
 
+  const motorbikes = motorbikesResult?.data || [];
+  const totalCount = motorbikesResult?.totalCount || 0;
+  const totalPages = motorbikesResult?.totalPages || 0;
+
   const stats = [
-    { label: "Tổng xe máy", value: motorbikes.length },
+    { label: "Tổng xe máy", value: totalCount },
     { label: "Cần sửa", value: motorbikes.filter(m => m.status === "needs_repair").length },
     { label: "Sẵn sàng", value: motorbikes.filter(m => m.status === "available").length },
     { label: "Đã giao", value: motorbikes.filter(m => m.status === "delivered").length },
@@ -196,6 +206,20 @@ export default function Motorbikes() {
               ))}
             </TableBody>
           </Table>
+        </div>
+      )}
+
+      {/* Pagination */}
+      {!isLoading && motorbikes.length > 0 && (
+        <div className="mt-6">
+          <DataPagination
+            currentPage={pagination.page}
+            totalPages={totalPages}
+            pageSize={pagination.pageSize}
+            totalItems={totalCount}
+            onPageChange={pagination.setPage}
+            onPageSizeChange={pagination.setPageSize}
+          />
         </div>
       )}
 

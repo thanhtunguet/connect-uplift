@@ -27,9 +27,11 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { DataPagination } from "@/components/ui/data-pagination";
 import { Search, Filter, MoreHorizontal, Eye, Edit, Trash2, Plus, Wrench, ExternalLink, AlertCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useComponents } from "@/hooks/useInventory";
+import { usePagination } from "@/hooks/usePagination";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
 
@@ -52,16 +54,25 @@ export default function Components() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
+  const pagination = usePagination({ initialPageSize: 10 });
+
   const {
-    data: components = [],
+    data: componentsResult,
     isLoading,
     error,
   } = useComponents({
     search: searchTerm,
     status: statusFilter,
+    page: pagination.page,
+    pageSize: pagination.pageSize,
   });
+
+  const components = componentsResult?.data || [];
+  const totalCount = componentsResult?.totalCount || 0;
+  const totalPages = componentsResult?.totalPages || 0;
+
   const stats = [
-    { label: "Tổng linh kiện", value: components.length },
+    { label: "Tổng linh kiện", value: totalCount },
     { label: "Sẵn sàng", value: components.filter(c => c.status === "available").length },
     { label: "Đã phân", value: components.filter(c => c.status === "assigned").length },
     { label: "Đã lắp", value: components.filter(c => c.status === "installed").length },
@@ -197,6 +208,20 @@ export default function Components() {
               ))}
             </TableBody>
           </Table>
+        </div>
+      )}
+
+      {/* Pagination */}
+      {!isLoading && components.length > 0 && (
+        <div className="mt-6">
+          <DataPagination
+            currentPage={pagination.page}
+            totalPages={totalPages}
+            pageSize={pagination.pageSize}
+            totalItems={totalCount}
+            onPageChange={pagination.setPage}
+            onPageSizeChange={pagination.setPageSize}
+          />
         </div>
       )}
 

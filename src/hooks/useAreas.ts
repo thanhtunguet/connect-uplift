@@ -14,12 +14,48 @@ export interface AreaData {
 interface AreaFilters {
   search?: string;
   isActive?: boolean | "all";
+  page?: number;
+  pageSize?: number;
+}
+
+interface AreasResult {
+  data: AreaData[];
+  totalCount: number;
+  totalPages: number;
 }
 
 export function useAreas(filters: AreaFilters = {}) {
   return useQuery({
     queryKey: ["areas", filters],
-    queryFn: async () => {
+    queryFn: async (): Promise<AreasResult> => {
+      const { page = 1, pageSize = 10 } = filters;
+      
+      // First, get count for total items
+      let countQuery = supabase
+        .from("areas")
+        .select("*", { count: "exact", head: true });
+
+      // Apply search filter to count query
+      if (filters.search && filters.search.trim()) {
+        const searchTerm = `%${filters.search.trim()}%`;
+        countQuery = countQuery.or(
+          `name.ilike.${searchTerm},description.ilike.${searchTerm}`
+        );
+      }
+
+      // Apply active status filter to count query
+      if (typeof filters.isActive === "boolean") {
+        countQuery = countQuery.eq("is_active", filters.isActive);
+      }
+
+      const { count, error: countError } = await countQuery;
+
+      if (countError) {
+        console.error("Error fetching areas count:", countError);
+        throw countError;
+      }
+
+      // Now get the actual data with pagination
       let query = supabase
         .from("areas")
         .select("*")
@@ -38,6 +74,11 @@ export function useAreas(filters: AreaFilters = {}) {
         query = query.eq("is_active", filters.isActive);
       }
 
+      // Apply pagination
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+      query = query.range(from, to);
+
       const { data, error } = await query;
 
       if (error) {
@@ -45,7 +86,14 @@ export function useAreas(filters: AreaFilters = {}) {
         throw error;
       }
 
-      return data as AreaData[];
+      const totalCount = count || 0;
+      const totalPages = Math.ceil(totalCount / pageSize);
+
+      return {
+        data: data as AreaData[],
+        totalCount,
+        totalPages,
+      };
     },
   });
 }

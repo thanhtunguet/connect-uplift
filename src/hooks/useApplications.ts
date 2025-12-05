@@ -54,12 +54,53 @@ export interface StudentApplicationData {
 interface ApplicationFilters {
   search?: string;
   status?: ApplicationStatus | "all";
+  page?: number;
+  pageSize?: number;
+}
+
+interface DonorApplicationsResult {
+  data: DonorApplicationData[];
+  totalCount: number;
+  totalPages: number;
+}
+
+interface StudentApplicationsResult {
+  data: StudentApplicationData[];
+  totalCount: number;
+  totalPages: number;
 }
 
 export function useDonorApplications(filters: ApplicationFilters = {}) {
   return useQuery({
     queryKey: ["donor-applications", filters],
-    queryFn: async () => {
+    queryFn: async (): Promise<DonorApplicationsResult> => {
+      const { page = 1, pageSize = 10 } = filters;
+      
+      // First, get count for total items
+      let countQuery = supabase
+        .from("donor_applications")
+        .select("*", { count: "exact", head: true });
+
+      // Apply filters to count query
+      if (filters.status && filters.status !== "all") {
+        countQuery = countQuery.eq("status", filters.status);
+      }
+
+      if (filters.search && filters.search.trim()) {
+        const searchTerm = `%${filters.search.trim()}%`;
+        countQuery = countQuery.or(
+          `full_name.ilike.${searchTerm},phone.ilike.${searchTerm},facebook_link.ilike.${searchTerm}`
+        );
+      }
+
+      const { count, error: countError } = await countQuery;
+
+      if (countError) {
+        console.error("Error fetching donor applications count:", countError);
+        throw countError;
+      }
+
+      // Now get the actual data with pagination
       let query = supabase
         .from("donor_applications")
         .select("*")
@@ -78,6 +119,11 @@ export function useDonorApplications(filters: ApplicationFilters = {}) {
         );
       }
 
+      // Apply pagination
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+      query = query.range(from, to);
+
       const { data, error } = await query;
 
       if (error) {
@@ -85,7 +131,14 @@ export function useDonorApplications(filters: ApplicationFilters = {}) {
         throw error;
       }
 
-      return data as DonorApplicationData[];
+      const totalCount = count || 0;
+      const totalPages = Math.ceil(totalCount / pageSize);
+
+      return {
+        data: data as DonorApplicationData[],
+        totalCount,
+        totalPages,
+      };
     },
   });
 }
@@ -93,7 +146,34 @@ export function useDonorApplications(filters: ApplicationFilters = {}) {
 export function useStudentApplications(filters: ApplicationFilters = {}) {
   return useQuery({
     queryKey: ["student-applications", filters],
-    queryFn: async () => {
+    queryFn: async (): Promise<StudentApplicationsResult> => {
+      const { page = 1, pageSize = 10 } = filters;
+      
+      // First, get count for total items
+      let countQuery = supabase
+        .from("student_applications")
+        .select("*", { count: "exact", head: true });
+
+      // Apply filters to count query
+      if (filters.status && filters.status !== "all") {
+        countQuery = countQuery.eq("status", filters.status);
+      }
+
+      if (filters.search && filters.search.trim()) {
+        const searchTerm = `%${filters.search.trim()}%`;
+        countQuery = countQuery.or(
+          `full_name.ilike.${searchTerm},phone.ilike.${searchTerm},facebook_link.ilike.${searchTerm}`
+        );
+      }
+
+      const { count, error: countError } = await countQuery;
+
+      if (countError) {
+        console.error("Error fetching student applications count:", countError);
+        throw countError;
+      }
+
+      // Now get the actual data with pagination
       let query = supabase
         .from("student_applications")
         .select("*")
@@ -112,6 +192,11 @@ export function useStudentApplications(filters: ApplicationFilters = {}) {
         );
       }
 
+      // Apply pagination
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+      query = query.range(from, to);
+
       const { data, error } = await query;
 
       if (error) {
@@ -119,7 +204,14 @@ export function useStudentApplications(filters: ApplicationFilters = {}) {
         throw error;
       }
 
-      return data as StudentApplicationData[];
+      const totalCount = count || 0;
+      const totalPages = Math.ceil(totalCount / pageSize);
+
+      return {
+        data: data as StudentApplicationData[],
+        totalCount,
+        totalPages,
+      };
     },
   });
 }

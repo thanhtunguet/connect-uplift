@@ -27,9 +27,11 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { DataPagination } from "@/components/ui/data-pagination";
 import { Search, Filter, MoreHorizontal, Eye, Edit, Trash2, Plus, Laptop, AlertCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useLaptops } from "@/hooks/useInventory";
+import { usePagination } from "@/hooks/usePagination";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
 
@@ -52,17 +54,25 @@ export default function Laptops() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
+  const pagination = usePagination({ initialPageSize: 10 });
+
   const {
-    data: laptops = [],
+    data: laptopsResult,
     isLoading,
     error,
   } = useLaptops({
     search: searchTerm,
     status: statusFilter,
+    page: pagination.page,
+    pageSize: pagination.pageSize,
   });
 
+  const laptops = laptopsResult?.data || [];
+  const totalCount = laptopsResult?.totalCount || 0;
+  const totalPages = laptopsResult?.totalPages || 0;
+
   const stats = [
-    { label: "Tổng laptop", value: laptops.length, color: "text-foreground" },
+    { label: "Tổng laptop", value: totalCount, color: "text-foreground" },
     { label: "Cần sửa", value: laptops.filter(l => l.status === "needs_repair").length, color: "text-warning" },
     { label: "Sẵn sàng", value: laptops.filter(l => l.status === "available").length, color: "text-success" },
     { label: "Đã giao", value: laptops.filter(l => l.status === "delivered").length, color: "text-secondary" },
@@ -196,6 +206,20 @@ export default function Laptops() {
               ))}
             </TableBody>
           </Table>
+        </div>
+      )}
+
+      {/* Pagination */}
+      {!isLoading && laptops.length > 0 && (
+        <div className="mt-6">
+          <DataPagination
+            currentPage={pagination.page}
+            totalPages={totalPages}
+            pageSize={pagination.pageSize}
+            totalItems={totalCount}
+            onPageChange={pagination.setPage}
+            onPageSizeChange={pagination.setPageSize}
+          />
         </div>
       )}
 

@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { StatusBadge } from "@/components/ui/status-badge";
+import { DataPagination } from "@/components/ui/data-pagination";
 import {
   Table,
   TableBody,
@@ -41,6 +42,7 @@ import { Search, Filter, MoreHorizontal, Eye, Edit, Trash2, Heart, AlertCircle, 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DonorDetailDialog } from "@/components/donors/DonorDetailDialog";
 import { useDonors, useToggleDonorActive, useDeleteDonor } from "@/hooks/useDonors";
+import { usePagination } from "@/hooks/usePagination";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
 import { 
@@ -60,8 +62,10 @@ export default function Donors() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [donorToDelete, setDonorToDelete] = useState<{ id: string; name: string } | null>(null);
 
+  const pagination = usePagination({ initialPageSize: 10 });
+
   const {
-    data: donors = [],
+    data: donorsResult,
     isLoading,
     error,
   } = useDonors({
@@ -69,7 +73,13 @@ export default function Donors() {
     supportType: supportTypeFilter,
     frequency: frequencyFilter,
     isActive: activeFilter,
+    page: pagination.page,
+    pageSize: pagination.pageSize,
   });
+
+  const donors = donorsResult?.data || [];
+  const totalCount = donorsResult?.totalCount || 0;
+  const totalPages = donorsResult?.totalPages || 0;
 
   const toggleActiveMutation = useToggleDonorActive();
   const deleteMutation = useDeleteDonor();
@@ -81,11 +91,11 @@ export default function Donors() {
   const stats = useMemo(() => {
     const activeDonors = donors.filter((d) => d.is_active);
     return [
-      { label: "Tổng nhà hảo tâm", value: donors.length, icon: Heart },
+      { label: "Tổng nhà hảo tâm", value: totalCount, icon: Heart },
       { label: "Đang hoạt động", value: activeDonors.length, icon: Power },
       { label: "Hỗ trợ định kỳ", value: donors.filter((d) => d.support_frequency === SupportFrequency.RECURRING).length, icon: Heart },
     ];
-  }, [donors]);
+  }, [donors, totalCount]);
 
   const handleViewDetails = (id: string) => {
     setSelectedDonorId(id);
@@ -278,6 +288,20 @@ export default function Donors() {
               ))}
             </TableBody>
           </Table>
+        </div>
+      )}
+
+      {/* Pagination */}
+      {!isLoading && donors.length > 0 && (
+        <div className="mt-6">
+          <DataPagination
+            currentPage={pagination.page}
+            totalPages={totalPages}
+            pageSize={pagination.pageSize}
+            totalItems={totalCount}
+            onPageChange={pagination.setPage}
+            onPageSizeChange={pagination.setPageSize}
+          />
         </div>
       )}
 

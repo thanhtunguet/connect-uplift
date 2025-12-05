@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { DataPagination } from "@/components/ui/data-pagination";
 import {
   Table,
   TableBody,
@@ -46,6 +47,7 @@ import {
   type DonorApplicationData,
   type StudentApplicationData,
 } from "@/hooks/useApplications";
+import { usePagination } from "@/hooks/usePagination";
 import type { ApplicationStatus } from "@/types/applications";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
@@ -71,9 +73,12 @@ interface ApplicationTableProps {
   onViewDetails: (id: string) => void;
   onApprove: (id: string, name: string) => void;
   onReject: (id: string, name: string) => void;
+  totalCount: number;
+  totalPages: number;
+  pagination: ReturnType<typeof usePagination>;
 }
 
-function ApplicationTable({ applications, type, isLoading, onViewDetails, onApprove, onReject }: ApplicationTableProps) {
+function ApplicationTable({ applications, type, isLoading, onViewDetails, onApprove, onReject, totalCount, totalPages, pagination }: ApplicationTableProps) {
   if (isLoading) {
     return (
       <div className="space-y-3">
@@ -99,74 +104,88 @@ function ApplicationTable({ applications, type, isLoading, onViewDetails, onAppr
   }
 
   return (
-    <div className="table-container">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Họ và tên</TableHead>
-            <TableHead>Số điện thoại</TableHead>
-            <TableHead>{type === "donor" ? "Loại hỗ trợ" : "Nhu cầu"}</TableHead>
-            <TableHead>Trạng thái</TableHead>
-            <TableHead>Ngày đăng ký</TableHead>
-            <TableHead className="w-[50px]"></TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {applications.map((app) => {
-            const isDonor = isDonorApplication(app);
-            const displayInfo = isDonor
-              ? app.support_types.map(t => supportTypeMap[t] || t).join(", ")
-              : [
-                  app.need_laptop && "Laptop",
-                  app.need_motorbike && "Xe máy",
-                  app.need_components && "Linh kiện",
-                  app.need_tuition && "Học phí",
-                ].filter(Boolean).join(", ");
+    <div className="space-y-4">
+      <div className="table-container">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Họ và tên</TableHead>
+              <TableHead>Số điện thoại</TableHead>
+              <TableHead>{type === "donor" ? "Loại hỗ trợ" : "Nhu cầu"}</TableHead>
+              <TableHead>Trạng thái</TableHead>
+              <TableHead>Ngày đăng ký</TableHead>
+              <TableHead className="w-[50px]"></TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {applications.map((app) => {
+              const isDonor = isDonorApplication(app);
+              const displayInfo = isDonor
+                ? app.support_types.map(t => supportTypeMap[t] || t).join(", ")
+                : [
+                    app.need_laptop && "Laptop",
+                    app.need_motorbike && "Xe máy",
+                    app.need_components && "Linh kiện",
+                    app.need_tuition && "Học phí",
+                  ].filter(Boolean).join(", ");
 
-            return (
-              <TableRow key={app.id} className="animate-fade-in">
-                <TableCell className="font-medium">{app.full_name}</TableCell>
-                <TableCell>{app.phone}</TableCell>
-                <TableCell>{displayInfo}</TableCell>
-                <TableCell>
-                  <StatusBadge status={app.status}>{statusMap[app.status]}</StatusBadge>
-                </TableCell>
-                <TableCell>{format(new Date(app.created_at), "dd/MM/yyyy", { locale: vi })}</TableCell>
-                <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => onViewDetails(app.id)}>
-                        <Eye className="mr-2 h-4 w-4" /> Xem chi tiết
-                      </DropdownMenuItem>
-                      {app.status === "pending" && (
-                        <>
-                          <DropdownMenuItem
-                            className="text-success"
-                            onClick={() => onApprove(app.id, app.full_name)}
-                          >
-                            <Check className="mr-2 h-4 w-4" /> Duyệt đơn
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            className="text-destructive"
-                            onClick={() => onReject(app.id, app.full_name)}
-                          >
-                            <X className="mr-2 h-4 w-4" /> Từ chối
-                          </DropdownMenuItem>
-                        </>
-                      )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
+              return (
+                <TableRow key={app.id} className="animate-fade-in">
+                  <TableCell className="font-medium">{app.full_name}</TableCell>
+                  <TableCell>{app.phone}</TableCell>
+                  <TableCell>{displayInfo}</TableCell>
+                  <TableCell>
+                    <StatusBadge status={app.status}>{statusMap[app.status]}</StatusBadge>
+                  </TableCell>
+                  <TableCell>{format(new Date(app.created_at), "dd/MM/yyyy", { locale: vi })}</TableCell>
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => onViewDetails(app.id)}>
+                          <Eye className="mr-2 h-4 w-4" /> Xem chi tiết
+                        </DropdownMenuItem>
+                        {app.status === "pending" && (
+                          <>
+                            <DropdownMenuItem
+                              className="text-success"
+                              onClick={() => onApprove(app.id, app.full_name)}
+                            >
+                              <Check className="mr-2 h-4 w-4" /> Duyệt đơn
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              className="text-destructive"
+                              onClick={() => onReject(app.id, app.full_name)}
+                            >
+                              <X className="mr-2 h-4 w-4" /> Từ chối
+                            </DropdownMenuItem>
+                          </>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* Pagination */}
+      {!isLoading && applications.length > 0 && (
+        <DataPagination
+          currentPage={pagination.page}
+          totalPages={totalPages}
+          pageSize={pagination.pageSize}
+          totalItems={totalCount}
+          onPageChange={pagination.setPage}
+          onPageSizeChange={pagination.setPageSize}
+        />
+      )}
     </div>
   );
 }
@@ -182,24 +201,39 @@ export default function Applications() {
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [applicationToReject, setApplicationToReject] = useState<{ id: string; name: string } | null>(null);
 
+  const donorPagination = usePagination({ initialPageSize: 10 });
+  const studentPagination = usePagination({ initialPageSize: 10 });
+
   // Fetch applications with filters
   const {
-    data: donorApplications = [],
+    data: donorApplicationsResult,
     isLoading: isDonorLoading,
     error: donorError,
   } = useDonorApplications({
     search: searchTerm,
     status: statusFilter,
+    page: donorPagination.page,
+    pageSize: donorPagination.pageSize,
   });
 
   const {
-    data: studentApplications = [],
+    data: studentApplicationsResult,
     isLoading: isStudentLoading,
     error: studentError,
   } = useStudentApplications({
     search: searchTerm,
     status: statusFilter,
+    page: studentPagination.page,
+    pageSize: studentPagination.pageSize,
   });
+
+  const donorApplications = donorApplicationsResult?.data || [];
+  const donorTotalCount = donorApplicationsResult?.totalCount || 0;
+  const donorTotalPages = donorApplicationsResult?.totalPages || 0;
+
+  const studentApplications = studentApplicationsResult?.data || [];
+  const studentTotalCount = studentApplicationsResult?.totalCount || 0;
+  const studentTotalPages = studentApplicationsResult?.totalPages || 0;
 
   // Fetch selected application details
   const { data: selectedDonorApplication } = useDonorApplication(
@@ -371,6 +405,9 @@ export default function Applications() {
             onViewDetails={handleViewDetails}
             onApprove={handleApprove}
             onReject={handleReject}
+            totalCount={donorTotalCount}
+            totalPages={donorTotalPages}
+            pagination={donorPagination}
           />
         </TabsContent>
 
@@ -382,6 +419,9 @@ export default function Applications() {
             onViewDetails={handleViewDetails}
             onApprove={handleApprove}
             onReject={handleReject}
+            totalCount={studentTotalCount}
+            totalPages={studentTotalPages}
+            pagination={studentPagination}
           />
         </TabsContent>
       </Tabs>

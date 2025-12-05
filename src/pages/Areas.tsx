@@ -57,7 +57,9 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Search, MoreHorizontal, Edit, Trash2, MapPin, AlertCircle, Power, Plus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DataPagination } from "@/components/ui/data-pagination";
 import { useAreas, useCreateArea, useUpdateArea, useToggleAreaActive, useDeleteArea, AreaData } from "@/hooks/useAreas";
+import { usePagination } from "@/hooks/usePagination";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
 import { useForm } from "react-hook-form";
@@ -81,14 +83,22 @@ export default function Areas() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [areaToDelete, setAreaToDelete] = useState<{ id: string; name: string } | null>(null);
 
+  const pagination = usePagination({ initialPageSize: 10 });
+
   const {
-    data: areas = [],
+    data: areasResult,
     isLoading,
     error,
   } = useAreas({
     search: searchTerm,
     isActive: activeFilter,
+    page: pagination.page,
+    pageSize: pagination.pageSize,
   });
+
+  const areas = areasResult?.data || [];
+  const totalCount = areasResult?.totalCount || 0;
+  const totalPages = areasResult?.totalPages || 0;
 
   const createMutation = useCreateArea();
   const updateMutation = useUpdateArea();
@@ -107,10 +117,10 @@ export default function Areas() {
   const stats = useMemo(() => {
     const activeAreas = areas.filter((a) => a.is_active);
     return [
-      { label: "Tổng khu vực", value: areas.length, icon: MapPin },
+      { label: "Tổng khu vực", value: totalCount, icon: MapPin },
       { label: "Đang hoạt động", value: activeAreas.length, icon: Power },
     ];
-  }, [areas]);
+  }, [areas, totalCount]);
 
   const handleAdd = () => {
     setEditingArea(null);
@@ -321,6 +331,20 @@ export default function Areas() {
               ))}
             </TableBody>
           </Table>
+        </div>
+      )}
+
+      {/* Pagination */}
+      {!isLoading && areas.length > 0 && (
+        <div className="mt-6">
+          <DataPagination
+            currentPage={pagination.page}
+            totalPages={totalPages}
+            pageSize={pagination.pageSize}
+            totalItems={totalCount}
+            onPageChange={pagination.setPage}
+            onPageSizeChange={pagination.setPageSize}
+          />
         </div>
       )}
 

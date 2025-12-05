@@ -34,12 +34,66 @@ interface StudentFilters {
   academicYear?: string | "all";
   needType?: string | "all";
   receivedStatus?: "received" | "not_received" | "all";
+  page?: number;
+  pageSize?: number;
+}
+
+interface StudentsResult {
+  data: StudentData[];
+  totalCount: number;
+  totalPages: number;
 }
 
 export function useStudents(filters: StudentFilters = {}) {
   return useQuery({
     queryKey: ["students", filters],
-    queryFn: async () => {
+    queryFn: async (): Promise<StudentsResult> => {
+      const { page = 1, pageSize = 10 } = filters;
+      
+      // First, get count for total items
+      let countQuery = supabase
+        .from("students")
+        .select("*", { count: "exact", head: true });
+
+      // Apply search filter to count query
+      if (filters.search && filters.search.trim()) {
+        const searchTerm = `%${filters.search.trim()}%`;
+        countQuery = countQuery.or(
+          `full_name.ilike.${searchTerm},phone.ilike.${searchTerm},facebook_link.ilike.${searchTerm}`
+        );
+      }
+
+      // Apply academic year filter to count query
+      if (filters.academicYear && filters.academicYear !== "all") {
+        countQuery = countQuery.eq("academic_year", filters.academicYear);
+      }
+
+      // Apply need type filter to count query
+      if (filters.needType && filters.needType !== "all") {
+        switch (filters.needType) {
+          case "laptop":
+            countQuery = countQuery.eq("need_laptop", true);
+            break;
+          case "motorbike":
+            countQuery = countQuery.eq("need_motorbike", true);
+            break;
+          case "tuition":
+            countQuery = countQuery.eq("need_tuition", true);
+            break;
+          case "components":
+            countQuery = countQuery.eq("need_components", true);
+            break;
+        }
+      }
+
+      const { count, error: countError } = await countQuery;
+
+      if (countError) {
+        console.error("Error fetching students count:", countError);
+        throw countError;
+      }
+
+      // Now get the actual data with pagination
       let query = supabase
         .from("students")
         .select("*")
@@ -76,6 +130,11 @@ export function useStudents(filters: StudentFilters = {}) {
         }
       }
 
+      // Apply pagination
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+      query = query.range(from, to);
+
       const { data, error } = await query;
 
       if (error) {
@@ -83,16 +142,56 @@ export function useStudents(filters: StudentFilters = {}) {
         throw error;
       }
 
-      // Apply received status filter in memory (since it requires complex logic)
       let filteredData = data as StudentData[];
-      if (filters.receivedStatus && filters.receivedStatus !== "all") {
-        filteredData = filteredData.filter((student) => {
-          const hasReceivedAny =
-            (student.need_laptop && student.laptop_received) ||
-            (student.need_motorbike && student.motorbike_received) ||
-            (student.need_tuition && student.tuition_supported) ||
-            (student.need_components && student.components_received);
+      let totalCount = count || 0;
 
+      // Apply received status filter in memory (since it requires complex logic)
+      if (filters.receivedStatus && filters.receivedStatus !== "all") {
+        // For received status filter, we need to filter in memory
+        // so we'll get all data first, then filter and paginate
+        let allDataQuery = supabase
+          .from("students")
+          .select("*")
+          .order("created_at", { ascending: false });
+
+        // Apply other filters to get all matching records
+        if (filters.search && filters.search.trim()) {
+          const searchTerm = `%${filters.search.trim()}%`;
+          allDataQuery = allDataQuery.or(
+            `full_name.ilike.${searchTerm},phone.ilike.${searchTerm},facebook_link.ilike.${searchTerm}`
+          );
+        }
+
+        if (filters.academicYear && filters.academicYear !== "all") {
+          allDataQuery = allDataQuery.eq("academic_year", filters.academicYear);
+        }
+
+        if (filters.needType && filters.needType !== "all") {
+          switch (filters.needType) {
+            case "laptop":
+              allDataQuery = allDataQuery.eq("need_laptop", true);
+              break;
+            case "motorbike":
+              allDataQuery = allDataQuery.eq("need_motorbike", true);
+              break;
+            case "tuition":
+              allDataQuery = allDataQuery.eq("need_tuition", true);
+              break;
+            case "components":
+              allDataQuery = allDataQuery.eq("need_components", true);
+              break;
+          }
+        }
+
+        const { data: allData, error: allDataError } = await allDataQuery;
+
+        if (allDataError) {
+          console.error("Error fetching all students:", allDataError);
+          throw allDataError;
+        }
+
+        // Filter by received status
+        const receivedFiltered = (allData as StudentData[]).filter((student) => {
           const hasReceivedAll =
             (!student.need_laptop || student.laptop_received) &&
             (!student.need_motorbike || student.motorbike_received) &&
@@ -107,9 +206,21 @@ export function useStudents(filters: StudentFilters = {}) {
                     student.need_tuition || student.need_components);
           }
         });
+
+        // Apply pagination to filtered results
+        totalCount = receivedFiltered.length;
+        const startIndex = (page - 1) * pageSize;
+        const endIndex = startIndex + pageSize;
+        filteredData = receivedFiltered.slice(startIndex, endIndex);
       }
 
-      return filteredData;
+      const totalPages = Math.ceil(totalCount / pageSize);
+
+      return {
+        data: filteredData,
+        totalCount,
+        totalPages,
+      };
     },
   });
 }
