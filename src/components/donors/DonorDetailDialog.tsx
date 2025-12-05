@@ -14,6 +14,12 @@ import { Edit, Loader2 } from "lucide-react";
 import type { DonorData } from "@/hooks/useDonors";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
+import { 
+  SupportType, 
+  SupportFrequency,
+  supportTypeLabels,
+  supportFrequencyLabels 
+} from "@/enums";
 
 interface DonorDetailDialogProps {
   open: boolean;
@@ -23,18 +29,6 @@ interface DonorDetailDialogProps {
   onToggleActive?: (id: string, isActive: boolean) => void;
   isLoading?: boolean;
 }
-
-const supportTypeMap: Record<string, string> = {
-  laptop: "Laptop",
-  motorbike: "Xe máy",
-  components: "Linh kiện",
-  tuition: "Học phí",
-};
-
-const supportFrequencyMap: Record<string, string> = {
-  one_time: "Một lần",
-  recurring: "Định kỳ",
-};
 
 export function DonorDetailDialog({
   open,
@@ -138,7 +132,7 @@ export function DonorDetailDialog({
                 <div className="flex flex-wrap gap-2">
                   {donor.support_types.map((type) => (
                     <Badge key={type} variant="secondary">
-                      {supportTypeMap[type] || type}
+                      {supportTypeLabels[type as SupportType] || type}
                     </Badge>
                   ))}
                 </div>
@@ -147,7 +141,7 @@ export function DonorDetailDialog({
                 <div>
                   <p className="text-sm text-muted-foreground">Tần suất hỗ trợ</p>
                   <p className="font-medium">
-                    {supportFrequencyMap[donor.support_frequency] || donor.support_frequency}
+                    {supportFrequencyLabels[donor.support_frequency as SupportFrequency] || donor.support_frequency}
                   </p>
                 </div>
                 {donor.support_end_date && (

@@ -19,7 +19,15 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
-import type { AcademicYear } from "@/types/applications";
+import { 
+  AcademicYear, 
+  SupportType,
+  academicYearLabels,
+  supportTypeLabels,
+  supportTypeDescriptions,
+  getAllAcademicYears,
+  ApplicationStatus
+} from "@/enums";
 
 const formSchema = z.object({
   full_name: z.string().min(2, "Họ và tên phải có ít nhất 2 ký tự"),
@@ -30,7 +38,7 @@ const formSchema = z.object({
   phone: z.string().regex(/^[0-9]{10,11}$/, "Số điện thoại phải có 10-11 chữ số"),
   address: z.string().min(5, "Địa chỉ phải có ít nhất 5 ký tự"),
   facebook_link: z.string().url("Link Facebook không hợp lệ").optional().or(z.literal("")),
-  academic_year: z.enum(["1", "2", "3", "4"], {
+  academic_year: z.nativeEnum(AcademicYear, {
     required_error: "Vui lòng chọn năm học",
   }),
   difficult_situation: z.string().min(20, "Vui lòng mô tả chi tiết hoàn cảnh khó khăn (ít nhất 20 ký tự)"),
@@ -60,18 +68,16 @@ interface StudentRegistrationFormProps {
   onCancel?: () => void;
 }
 
-const academicYearOptions = [
-  { value: "1" as AcademicYear, label: "Năm 1" },
-  { value: "2" as AcademicYear, label: "Năm 2" },
-  { value: "3" as AcademicYear, label: "Năm 3" },
-  { value: "4" as AcademicYear, label: "Năm 4" },
-];
+const academicYearOptions = getAllAcademicYears().map((year) => ({
+  value: year,
+  label: academicYearLabels[year],
+}));
 
 const needOptions = [
-  { name: "need_laptop" as const, label: "Laptop", description: "Cần laptop để học tập" },
-  { name: "need_motorbike" as const, label: "Xe máy", description: "Cần xe máy để đi làm thêm hoặc đi học" },
-  { name: "need_tuition" as const, label: "Học phí", description: "Cần hỗ trợ học phí" },
-  { name: "need_components" as const, label: "Linh kiện", description: "Có laptop nhưng cần sửa chữa/thay linh kiện" },
+  { name: "need_laptop" as const, supportType: SupportType.LAPTOP, label: supportTypeLabels[SupportType.LAPTOP], description: supportTypeDescriptions[SupportType.LAPTOP] },
+  { name: "need_motorbike" as const, supportType: SupportType.MOTORBIKE, label: supportTypeLabels[SupportType.MOTORBIKE], description: supportTypeDescriptions[SupportType.MOTORBIKE] },
+  { name: "need_tuition" as const, supportType: SupportType.TUITION, label: supportTypeLabels[SupportType.TUITION], description: supportTypeDescriptions[SupportType.TUITION] },
+  { name: "need_components" as const, supportType: SupportType.COMPONENTS, label: supportTypeLabels[SupportType.COMPONENTS], description: supportTypeDescriptions[SupportType.COMPONENTS] },
 ];
 
 export function StudentRegistrationForm({ onSuccess, onCancel }: StudentRegistrationFormProps) {
@@ -85,7 +91,7 @@ export function StudentRegistrationForm({ onSuccess, onCancel }: StudentRegistra
       phone: "",
       address: "",
       facebook_link: "",
-      academic_year: "1",
+      academic_year: AcademicYear.YEAR_1,
       difficult_situation: "",
       need_laptop: false,
       need_motorbike: false,
@@ -113,7 +119,7 @@ export function StudentRegistrationForm({ onSuccess, onCancel }: StudentRegistra
         need_tuition: values.need_tuition,
         need_components: values.need_components,
         components_details: values.components_details || null,
-        status: "pending",
+        status: ApplicationStatus.PENDING,
       });
 
       if (error) throw error;

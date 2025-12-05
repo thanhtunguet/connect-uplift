@@ -43,18 +43,12 @@ import { DonorDetailDialog } from "@/components/donors/DonorDetailDialog";
 import { useDonors, useToggleDonorActive, useDeleteDonor } from "@/hooks/useDonors";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
-
-const supportTypeMap: Record<string, string> = {
-  laptop: "Laptop",
-  motorbike: "Xe máy",
-  components: "Linh kiện",
-  tuition: "Học phí",
-};
-
-const supportFrequencyMap: Record<string, string> = {
-  one_time: "Một lần",
-  recurring: "Định kỳ",
-};
+import { 
+  SupportType, 
+  SupportFrequency,
+  supportTypeLabels,
+  supportFrequencyLabels 
+} from "@/enums";
 
 export default function Donors() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -89,7 +83,7 @@ export default function Donors() {
     return [
       { label: "Tổng nhà hảo tâm", value: donors.length, icon: Heart },
       { label: "Đang hoạt động", value: activeDonors.length, icon: Power },
-      { label: "Hỗ trợ định kỳ", value: donors.filter((d) => d.support_frequency === "recurring").length, icon: Heart },
+      { label: "Hỗ trợ định kỳ", value: donors.filter((d) => d.support_frequency === SupportFrequency.RECURRING).length, icon: Heart },
     ];
   }, [donors]);
 
@@ -161,10 +155,10 @@ export default function Donors() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Tất cả loại</SelectItem>
-              <SelectItem value="laptop">Laptop</SelectItem>
-              <SelectItem value="motorbike">Xe máy</SelectItem>
-              <SelectItem value="components">Linh kiện</SelectItem>
-              <SelectItem value="tuition">Học phí</SelectItem>
+              <SelectItem value={SupportType.LAPTOP}>{supportTypeLabels[SupportType.LAPTOP]}</SelectItem>
+              <SelectItem value={SupportType.MOTORBIKE}>{supportTypeLabels[SupportType.MOTORBIKE]}</SelectItem>
+              <SelectItem value={SupportType.COMPONENTS}>{supportTypeLabels[SupportType.COMPONENTS]}</SelectItem>
+              <SelectItem value={SupportType.TUITION}>{supportTypeLabels[SupportType.TUITION]}</SelectItem>
             </SelectContent>
           </Select>
           <Select value={frequencyFilter} onValueChange={setFrequencyFilter}>
@@ -173,8 +167,8 @@ export default function Donors() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Tất cả</SelectItem>
-              <SelectItem value="one_time">Một lần</SelectItem>
-              <SelectItem value="recurring">Định kỳ</SelectItem>
+              <SelectItem value={SupportFrequency.ONE_TIME}>{supportFrequencyLabels[SupportFrequency.ONE_TIME]}</SelectItem>
+              <SelectItem value={SupportFrequency.RECURRING}>{supportFrequencyLabels[SupportFrequency.RECURRING]}</SelectItem>
             </SelectContent>
           </Select>
           <Select
@@ -235,11 +229,11 @@ export default function Donors() {
                   <TableCell className="font-medium">{donor.full_name}</TableCell>
                   <TableCell>{donor.phone}</TableCell>
                   <TableCell>
-                    {donor.support_types.map(t => supportTypeMap[t] || t).join(", ")}
+                    {donor.support_types.map(t => supportTypeLabels[t as SupportType] || t).join(", ")}
                   </TableCell>
                   <TableCell>
-                    <StatusBadge status={donor.support_frequency === "recurring" ? "approved" : "pending"}>
-                      {supportFrequencyMap[donor.support_frequency] || donor.support_frequency}
+                    <StatusBadge status={donor.support_frequency === SupportFrequency.RECURRING ? "approved" : "pending"}>
+                      {supportFrequencyLabels[donor.support_frequency as SupportFrequency] || donor.support_frequency}
                     </StatusBadge>
                   </TableCell>
                   <TableCell>

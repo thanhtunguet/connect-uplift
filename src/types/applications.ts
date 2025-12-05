@@ -1,8 +1,10 @@
-// Enums
-export type ApplicationStatus = 'pending' | 'approved' | 'rejected';
-export type SupportType = 'laptop' | 'motorbike' | 'components' | 'tuition';
-export type SupportFrequency = 'one_time' | 'recurring';
-export type AcademicYear = '1' | '2' | '3' | '4';
+// Import enums from central location
+export { 
+  ApplicationStatus, 
+  SupportType, 
+  SupportFrequency, 
+  AcademicYear 
+} from '@/enums';
 
 // Donor Application
 export interface DonorApplication {

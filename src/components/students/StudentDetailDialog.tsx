@@ -14,6 +14,12 @@ import { Edit, Loader2, CheckCircle2, Circle } from "lucide-react";
 import type { StudentData } from "@/hooks/useStudents";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
+import { 
+  AcademicYear, 
+  SupportType,
+  academicYearLabels,
+  supportTypeLabels 
+} from "@/enums";
 
 interface StudentDetailDialogProps {
   open: boolean;
@@ -23,13 +29,6 @@ interface StudentDetailDialogProps {
   onMarkReceived?: (id: string, type: "laptop" | "motorbike" | "tuition" | "components", received: boolean) => void;
   isLoading?: boolean;
 }
-
-const academicYearMap: Record<string, string> = {
-  "1": "Năm 1",
-  "2": "Năm 2",
-  "3": "Năm 3",
-  "4": "Năm 4",
-};
 
 export function StudentDetailDialog({
   open,
@@ -44,28 +43,28 @@ export function StudentDetailDialog({
   const needItems = [
     {
       type: "laptop" as const,
-      label: "Laptop",
+      label: supportTypeLabels[SupportType.LAPTOP],
       need: student.need_laptop,
       received: student.laptop_received,
       receivedDate: student.laptop_received_date,
     },
     {
       type: "motorbike" as const,
-      label: "Xe máy",
+      label: supportTypeLabels[SupportType.MOTORBIKE],
       need: student.need_motorbike,
       received: student.motorbike_received,
       receivedDate: student.motorbike_received_date,
     },
     {
       type: "tuition" as const,
-      label: "Học phí",
+      label: supportTypeLabels[SupportType.TUITION],
       need: student.need_tuition,
       received: student.tuition_supported,
       receivedDate: student.tuition_support_start_date,
     },
     {
       type: "components" as const,
-      label: "Linh kiện",
+      label: supportTypeLabels[SupportType.COMPONENTS],
       need: student.need_components,
       received: student.components_received,
       receivedDate: null,
@@ -113,7 +112,7 @@ export function StudentDetailDialog({
               <div>
                 <p className="text-sm text-muted-foreground">Năm học</p>
                 <p className="font-medium">
-                  {academicYearMap[student.academic_year] || student.academic_year}
+                  {academicYearLabels[student.academic_year as AcademicYear] || student.academic_year}
                 </p>
               </div>
               <div>

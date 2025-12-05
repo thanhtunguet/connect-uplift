@@ -19,7 +19,16 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
-import type { SupportType, SupportFrequency } from "@/types/applications";
+import { 
+  SupportType, 
+  SupportFrequency,
+  ApplicationStatus,
+  supportTypeLabels,
+  supportFrequencyLabels,
+  supportFrequencyDescriptions,
+  getAllSupportTypes,
+  getAllSupportFrequencies
+} from "@/enums";
 
 const formSchema = z.object({
   full_name: z.string().min(2, "Họ và tên phải có ít nhất 2 ký tự"),
@@ -30,8 +39,8 @@ const formSchema = z.object({
   phone: z.string().regex(/^[0-9]{10,11}$/, "Số điện thoại phải có 10-11 chữ số"),
   address: z.string().min(5, "Địa chỉ phải có ít nhất 5 ký tự"),
   facebook_link: z.string().url("Link Facebook không hợp lệ").optional().or(z.literal("")),
-  support_types: z.array(z.enum(["laptop", "motorbike", "components", "tuition"])).min(1, "Vui lòng chọn ít nhất một loại hỗ trợ"),
-  support_frequency: z.enum(["one_time", "recurring"], {
+  support_types: z.array(z.nativeEnum(SupportType)).min(1, "Vui lòng chọn ít nhất một loại hỗ trợ"),
+  support_frequency: z.nativeEnum(SupportFrequency, {
     required_error: "Vui lòng chọn mức độ hỗ trợ",
   }),
   support_details: z.string().optional(),
@@ -44,17 +53,16 @@ interface DonorRegistrationFormProps {
   onCancel?: () => void;
 }
 
-const supportTypeOptions = [
-  { value: "laptop" as SupportType, label: "Laptop" },
-  { value: "motorbike" as SupportType, label: "Xe máy" },
-  { value: "components" as SupportType, label: "Linh kiện" },
-  { value: "tuition" as SupportType, label: "Học phí" },
-];
+const supportTypeOptions = getAllSupportTypes().map((type) => ({
+  value: type,
+  label: supportTypeLabels[type],
+}));
 
-const supportFrequencyOptions = [
-  { value: "one_time" as SupportFrequency, label: "Một lần", description: "Hỗ trợ một lần duy nhất" },
-  { value: "recurring" as SupportFrequency, label: "Định kỳ", description: "Hỗ trợ nhiều lần trong một khoảng thời gian" },
-];
+const supportFrequencyOptions = getAllSupportFrequencies().map((frequency) => ({
+  value: frequency,
+  label: supportFrequencyLabels[frequency],
+  description: supportFrequencyDescriptions[frequency],
+}));
 
 export function DonorRegistrationForm({ onSuccess, onCancel }: DonorRegistrationFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -68,7 +76,7 @@ export function DonorRegistrationForm({ onSuccess, onCancel }: DonorRegistration
       address: "",
       facebook_link: "",
       support_types: [],
-      support_frequency: "one_time",
+      support_frequency: SupportFrequency.ONE_TIME,
       support_details: "",
     },
   });
@@ -85,7 +93,7 @@ export function DonorRegistrationForm({ onSuccess, onCancel }: DonorRegistration
         support_types: values.support_types,
         support_frequency: values.support_frequency,
         support_details: values.support_details || null,
-        status: "pending",
+        status: ApplicationStatus.PENDING,
       });
 
       if (error) throw error;

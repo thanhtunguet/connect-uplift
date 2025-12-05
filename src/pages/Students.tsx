@@ -43,13 +43,12 @@ import { StudentDetailDialog } from "@/components/students/StudentDetailDialog";
 import { useStudents, useMarkReceived, useDeleteStudent } from "@/hooks/useStudents";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
-
-const academicYearMap: Record<string, string> = {
-  "1": "Năm 1",
-  "2": "Năm 2",
-  "3": "Năm 3",
-  "4": "Năm 4",
-};
+import { 
+  AcademicYear, 
+  SupportType,
+  academicYearLabels,
+  supportTypeLabels 
+} from "@/enums";
 
 export default function Students() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -137,10 +136,10 @@ export default function Students() {
 
   const getStudentNeeds = (student: typeof students[0]) => {
     const needs = [];
-    if (student.need_laptop) needs.push("Laptop");
-    if (student.need_motorbike) needs.push("Xe máy");
-    if (student.need_tuition) needs.push("Học phí");
-    if (student.need_components) needs.push("Linh kiện");
+    if (student.need_laptop) needs.push(supportTypeLabels[SupportType.LAPTOP]);
+    if (student.need_motorbike) needs.push(supportTypeLabels[SupportType.MOTORBIKE]);
+    if (student.need_tuition) needs.push(supportTypeLabels[SupportType.TUITION]);
+    if (student.need_components) needs.push(supportTypeLabels[SupportType.COMPONENTS]);
     return needs.join(", ");
   };
 
@@ -206,10 +205,10 @@ export default function Students() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Tất cả năm</SelectItem>
-              <SelectItem value="1">Năm 1</SelectItem>
-              <SelectItem value="2">Năm 2</SelectItem>
-              <SelectItem value="3">Năm 3</SelectItem>
-              <SelectItem value="4">Năm 4</SelectItem>
+              <SelectItem value={AcademicYear.YEAR_1}>{academicYearLabels[AcademicYear.YEAR_1]}</SelectItem>
+              <SelectItem value={AcademicYear.YEAR_2}>{academicYearLabels[AcademicYear.YEAR_2]}</SelectItem>
+              <SelectItem value={AcademicYear.YEAR_3}>{academicYearLabels[AcademicYear.YEAR_3]}</SelectItem>
+              <SelectItem value={AcademicYear.YEAR_4}>{academicYearLabels[AcademicYear.YEAR_4]}</SelectItem>
             </SelectContent>
           </Select>
           <Select value={needTypeFilter} onValueChange={setNeedTypeFilter}>
@@ -218,13 +217,13 @@ export default function Students() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Tất cả</SelectItem>
-              <SelectItem value="laptop">Laptop</SelectItem>
-              <SelectItem value="motorbike">Xe máy</SelectItem>
-              <SelectItem value="tuition">Học phí</SelectItem>
-              <SelectItem value="components">Linh kiện</SelectItem>
+              <SelectItem value={SupportType.LAPTOP}>{supportTypeLabels[SupportType.LAPTOP]}</SelectItem>
+              <SelectItem value={SupportType.MOTORBIKE}>{supportTypeLabels[SupportType.MOTORBIKE]}</SelectItem>
+              <SelectItem value={SupportType.TUITION}>{supportTypeLabels[SupportType.TUITION]}</SelectItem>
+              <SelectItem value={SupportType.COMPONENTS}>{supportTypeLabels[SupportType.COMPONENTS]}</SelectItem>
             </SelectContent>
           </Select>
-          <Select value={receivedFilter} onValueChange={(value) => setReceivedFilter(value as any)}>
+          <Select value={receivedFilter} onValueChange={(value) => setReceivedFilter(value as "received" | "not_received" | "all")}>
             <SelectTrigger className="w-[140px]">
               <SelectValue placeholder="Trạng thái" />
             </SelectTrigger>
@@ -281,7 +280,7 @@ export default function Students() {
                     <TableCell className="font-medium">{student.full_name}</TableCell>
                     <TableCell>{student.phone}</TableCell>
                     <TableCell>
-                      {academicYearMap[student.academic_year] || student.academic_year}
+                      {academicYearLabels[student.academic_year as AcademicYear] || student.academic_year}
                     </TableCell>
                     <TableCell>{getStudentNeeds(student)}</TableCell>
                     <TableCell>
