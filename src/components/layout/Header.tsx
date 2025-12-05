@@ -13,6 +13,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 
 interface HeaderProps {
   title: string;
@@ -46,62 +47,68 @@ export function Header({ title, description }: HeaderProps) {
   const fullName = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email;
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-background/95 px-6 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div>
-        <h1 className="text-xl font-semibold text-foreground">{title}</h1>
-        {description && (
-          <p className="text-sm text-muted-foreground">{description}</p>
-        )}
-      </div>
+    <header className= "sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-background/95 px-6 backdrop-blur supports-[backdrop-filter]:bg-background/60" >
+    <div className="flex items-center gap-4" >
+      <SidebarTrigger />
+      < div >
+      <h1 className="text-xl font-semibold text-foreground" > { title } </h1>
+  {
+    description && (
+      <p className="text-sm text-muted-foreground" > { description } </p>
+          )
+  }
+  </div>
+    </div>
 
-      <div className="flex items-center gap-4">
-        <div className="relative hidden md:block">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+    < div className = "flex items-center gap-4" >
+      <div className="relative hidden md:block" >
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Tìm kiếm..."
-            className="w-64 pl-9"
-          />
-        </div>
+  className = "w-64 pl-9"
+    />
+    </div>
 
-        <Button variant="ghost" size="icon" className="relative">
-          <Bell className="h-5 w-5" />
-          <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-medium text-primary-foreground">
-            3
+    < Button variant = "ghost" size = "icon" className = "relative" >
+      <Bell className="h-5 w-5" />
+        <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-medium text-primary-foreground" >
+          3
           </span>
-        </Button>
+          </Button>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="relative h-9 w-9 rounded-full">
-              <Avatar className="h-9 w-9">
-                <AvatarImage src={user?.user_metadata?.avatar_url} />
-                <AvatarFallback className="bg-primary text-primary-foreground">
-                  {getInitials(fullName)}
-                </AvatarFallback>
-              </Avatar>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-56" align="end" forceMount>
-            <DropdownMenuLabel className="font-normal">
-              <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none">{fullName || "Người dùng"}</p>
-                <p className="text-xs leading-none text-muted-foreground">
-                  {user?.email}
-                </p>
+          < DropdownMenu >
+          <DropdownMenuTrigger asChild >
+          <Button variant="ghost" className = "relative h-9 w-9 rounded-full" >
+            <Avatar className="h-9 w-9" >
+              <AvatarImage src={ user?.user_metadata?.avatar_url } />
+                < AvatarFallback className = "bg-primary text-primary-foreground" >
+                  { getInitials(fullName) }
+                  </AvatarFallback>
+                  </Avatar>
+                  </Button>
+                  </DropdownMenuTrigger>
+                  < DropdownMenuContent className = "w-56" align = "end" forceMount >
+                    <DropdownMenuLabel className="font-normal" >
+                      <div className="flex flex-col space-y-1" >
+                        <p className="text-sm font-medium leading-none" > { fullName || "Người dùng"
+} </p>
+  < p className = "text-xs leading-none text-muted-foreground" >
+    { user?.email }
+    </p>
+    </div>
+    </DropdownMenuLabel>
+    < DropdownMenuSeparator />
+    <DropdownMenuItem onClick={ () => navigate("/cai-dat") }>
+      Cài đặt
+        </DropdownMenuItem>
+        < DropdownMenuSeparator />
+        <DropdownMenuItem onClick={ handleSignOut } className = "text-destructive" >
+          <LogOut className="mr-2 h-4 w-4" />
+            Đăng xuất
+              </DropdownMenuItem>
+              </DropdownMenuContent>
+              </DropdownMenu>
               </div>
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => navigate("/cai-dat")}>
-              Cài đặt
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
-              <LogOut className="mr-2 h-4 w-4" />
-              Đăng xuất
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-    </header>
+              </header>
   );
 }

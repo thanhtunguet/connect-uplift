@@ -1,7 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
-  Users,
   GraduationCap,
   Laptop,
   Bike,
@@ -11,7 +10,18 @@ import {
   Heart,
   Settings,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarHeader,
+  SidebarFooter,
+} from "@/components/ui/sidebar";
 
 const navigation = [
   { name: "Tổng quan", href: "/", icon: LayoutDashboard },
@@ -24,48 +34,61 @@ const navigation = [
   { name: "Báo cáo", href: "/bao-cao", icon: BarChart3 },
 ];
 
-export function Sidebar() {
+export function AppSidebar() {
   const location = useLocation();
 
   return (
-    <aside className="fixed left-0 top-0 z-40 h-screen w-64 bg-sidebar">
-      <div className="flex h-full flex-col">
-        {/* Logo */}
-        <div className="flex h-16 items-center gap-3 border-b border-sidebar-border px-6">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary">
-            <Laptop className="h-5 w-5 text-primary-foreground" />
-          </div>
-          <div>
-            <h1 className="text-lg font-bold text-sidebar-foreground">Ăn mày laptop</h1>
-            <p className="text-xs text-sidebar-foreground/60">Hệ thống quản lý</p>
-          </div>
-        </div>
+    <Sidebar variant= "inset" collapsible = "icon" >
+      <SidebarHeader>
+      <div className="flex h-12 items-center gap-3 px-2" >
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary" >
+          <Laptop className="h-4 w-4 text-primary-foreground" />
+            </div>
+            < div className = "grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden" >
+              <span className="truncate font-semibold text-foreground" > Ăn mày laptop </span>
+                < span className = "truncate text-xs text-muted-foreground" > Hệ thống quản lý </span>
+                  </div>
+                  </div>
+                  </SidebarHeader>
 
-        {/* Navigation */}
-        <nav className="flex-1 space-y-1 overflow-y-auto p-4">
-          {navigation.map((item) => {
-            const isActive = location.pathname === item.href;
-            return (
-              <Link
-                key={item.name}
-                to={item.href}
-                className={cn("nav-item", isActive && "active")}
-              >
-                <item.icon className="h-5 w-5" />
-                <span>{item.name}</span>
-              </Link>
-            );
-          })}
-        </nav>
+                  < SidebarContent >
+                  <SidebarGroup>
+                  <SidebarGroupLabel>Menu </SidebarGroupLabel>
+                  < SidebarGroupContent >
+                  <SidebarMenu>
+                  {
+                    navigation.map((item) => (
+                      <SidebarMenuItem key= { item.name } >
+                      <SidebarMenuButton
+                    asChild
+                    isActive = { location.pathname === item.href }
+                    tooltip = { item.name }
+                      >
+                      <Link to={ item.href } >
+                      <item.icon />
+                      < span > { item.name } </span>
+                      </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    ))
+                  }
+                  </SidebarMenu>
+                  </SidebarGroupContent>
+                  </SidebarGroup>
+                  </SidebarContent>
 
-        {/* Footer */}
-        <div className="border-t border-sidebar-border p-4">
-          <Link to="/cai-dat" className="nav-item">
-            <Settings className="h-5 w-5" />
-            <span>Cài đặt</span>
-          </Link>
-        </div>
-      </div>
-    </aside>
+                  < SidebarFooter >
+                  <SidebarMenu>
+                  <SidebarMenuItem>
+                  <SidebarMenuButton asChild tooltip = "Cài đặt" >
+                    <Link to="/cai-dat" >
+                      <Settings />
+                      < span > Cài đặt </span>
+                        </Link>
+                        </SidebarMenuButton>
+                        </SidebarMenuItem>
+                        </SidebarMenu>
+                        </SidebarFooter>
+                        </Sidebar>
   );
 }

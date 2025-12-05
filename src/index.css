@@ -138,7 +138,7 @@
   }
 
   .table-container {
-    @apply rounded-xl border bg-card shadow-sm overflow-hidden;
+    @apply rounded-xl border bg-card shadow-sm overflow-x-auto;
   }
 
   .badge-status {
