@@ -1,5 +1,7 @@
 import { Laptop, Bike, GraduationCap, Wrench } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { useDashboardStats } from "@/hooks/useDashboardStats";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface NeedItem {
   type: string;
@@ -9,20 +11,65 @@ interface NeedItem {
   color: string;
 }
 
-const needs: NeedItem[] = [
-  { type: "Laptop", icon: Laptop, needed: 45, fulfilled: 28, color: "bg-primary" },
-  { type: "Xe máy", icon: Bike, needed: 12, fulfilled: 5, color: "bg-secondary" },
-  { type: "Học phí", icon: GraduationCap, needed: 20, fulfilled: 8, color: "bg-success" },
-  { type: "Linh kiện", icon: Wrench, needed: 35, fulfilled: 22, color: "bg-warning" },
-];
-
 export function NeedsOverview() {
+  const { data: stats, isLoading } = useDashboardStats();
+
+  if (isLoading) {
+    return (
+      <div className="rounded-xl border bg-card p-6">
+        <h3 className="mb-4 text-lg font-semibold text-foreground">Tổng quan nhu cầu</h3>
+        <div className="space-y-5">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-4 w-20" />
+              </div>
+              <Skeleton className="h-2 w-full" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  const needs: NeedItem[] = [
+    {
+      type: "Laptop",
+      icon: Laptop,
+      needed: stats?.laptopNeeds.needed || 0,
+      fulfilled: stats?.laptopNeeds.fulfilled || 0,
+      color: "bg-primary",
+    },
+    {
+      type: "Xe máy",
+      icon: Bike,
+      needed: stats?.motorbikeNeeds.needed || 0,
+      fulfilled: stats?.motorbikeNeeds.fulfilled || 0,
+      color: "bg-secondary",
+    },
+    {
+      type: "Học phí",
+      icon: GraduationCap,
+      needed: stats?.tuitionNeeds.needed || 0,
+      fulfilled: stats?.tuitionNeeds.fulfilled || 0,
+      color: "bg-success",
+    },
+    {
+      type: "Linh kiện",
+      icon: Wrench,
+      needed: stats?.componentNeeds.needed || 0,
+      fulfilled: stats?.componentNeeds.fulfilled || 0,
+      color: "bg-warning",
+    },
+  ];
+
   return (
     <div className="rounded-xl border bg-card p-6">
       <h3 className="mb-4 text-lg font-semibold text-foreground">Tổng quan nhu cầu</h3>
       <div className="space-y-5">
         {needs.map((need, index) => {
-          const percentage = Math.round((need.fulfilled / need.needed) * 100);
+          const percentage = need.needed > 0 ? Math.round((need.fulfilled / need.needed) * 100) : 0;
           return (
             <div
               key={need.type}

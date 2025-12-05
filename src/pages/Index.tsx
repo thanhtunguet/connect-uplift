@@ -3,53 +3,74 @@ import { StatCard } from "@/components/dashboard/StatCard";
 import { RecentActivity } from "@/components/dashboard/RecentActivity";
 import { NeedsOverview } from "@/components/dashboard/NeedsOverview";
 import { Heart, GraduationCap, Laptop, Bike, FileText, Wrench } from "lucide-react";
-
-const stats = [
-  {
-    title: "Nhà hảo tâm",
-    value: 156,
-    subtitle: "42 đang hoạt động",
-    icon: Heart,
-    trend: { value: 12, isPositive: true },
-    variant: "primary" as const,
-  },
-  {
-    title: "Sinh viên",
-    value: 234,
-    subtitle: "89 đã nhận hỗ trợ",
-    icon: GraduationCap,
-    trend: { value: 8, isPositive: true },
-    variant: "secondary" as const,
-  },
-  {
-    title: "Laptop",
-    value: 78,
-    subtitle: "23 sẵn sàng tặng",
-    icon: Laptop,
-    trend: { value: 15, isPositive: true },
-    variant: "success" as const,
-  },
-  {
-    title: "Xe máy",
-    value: 15,
-    subtitle: "5 sẵn sàng tặng",
-    icon: Bike,
-    trend: { value: 5, isPositive: true },
-    variant: "warning" as const,
-  },
-];
-
-const quickStats = [
-  { title: "Đơn đăng ký mới", value: 12, icon: FileText },
-  { title: "Linh kiện cần hỗ trợ", value: 8, icon: Wrench },
-];
+import { useDashboardStats } from "@/hooks/useDashboardStats";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Index() {
+  const { data: stats, isLoading } = useDashboardStats();
+
+  if (isLoading) {
+    return (
+      <MainLayout title="Tổng quan" description="Chào mừng đến với hệ thống quản lý Ăn mày laptop">
+        <div className="mb-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-32" />
+          ))}
+        </div>
+        <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {[1, 2].map((i) => (
+            <Skeleton key={i} className="h-20" />
+          ))}
+        </div>
+        <div className="grid gap-6 lg:grid-cols-2">
+          <Skeleton className="h-64" />
+          <Skeleton className="h-64" />
+        </div>
+      </MainLayout>
+    );
+  }
+
+  const mainStats = [
+    {
+      title: "Nhà hảo tâm",
+      value: stats?.totalDonors || 0,
+      subtitle: `${stats?.activeDonors || 0} đang hoạt động`,
+      icon: Heart,
+      variant: "primary" as const,
+    },
+    {
+      title: "Sinh viên",
+      value: stats?.totalStudents || 0,
+      subtitle: `${stats?.studentsReceivedSupport || 0} đã nhận hỗ trợ`,
+      icon: GraduationCap,
+      variant: "secondary" as const,
+    },
+    {
+      title: "Laptop",
+      value: stats?.totalLaptops || 0,
+      subtitle: `${stats?.availableLaptops || 0} sẵn sàng tặng`,
+      icon: Laptop,
+      variant: "success" as const,
+    },
+    {
+      title: "Xe máy",
+      value: stats?.totalMotorbikes || 0,
+      subtitle: `${stats?.availableMotorbikes || 0} sẵn sàng tặng`,
+      icon: Bike,
+      variant: "warning" as const,
+    },
+  ];
+
+  const quickStats = [
+    { title: "Đơn đăng ký mới", value: stats?.newApplications || 0, icon: FileText },
+    { title: "Linh kiện cần hỗ trợ", value: stats?.componentsNeedingSupport || 0, icon: Wrench },
+  ];
+
   return (
     <MainLayout title="Tổng quan" description="Chào mừng đến với hệ thống quản lý Ăn mày laptop">
       {/* Stats Grid */}
       <div className="mb-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat, index) => (
+        {mainStats.map((stat, index) => (
           <div key={stat.title} style={{ animationDelay: `${index * 100}ms` }}>
             <StatCard {...stat} />
           </div>
