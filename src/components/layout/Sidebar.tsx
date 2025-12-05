@@ -46,7 +46,7 @@ export function AppSidebar() {
           <Laptop className="h-4 w-4 text-primary-foreground" />
             </div>
             < div className = "grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden" >
-              <span className="truncate font-semibold text-foreground" > Ăn mày laptop </span>
+              <span className="truncate font-semibold text-background" > Ăn mày laptop </span>
                 < span className = "truncate text-xs text-muted-foreground" > Hệ thống quản lý </span>
                   </div>
                   </div>

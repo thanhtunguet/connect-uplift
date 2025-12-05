@@ -24,10 +24,7 @@ import {
   SupportFrequency,
   ApplicationStatus,
   supportTypeLabels,
-  supportFrequencyLabels,
-  supportFrequencyDescriptions,
-  getAllSupportTypes,
-  getAllSupportFrequencies
+  getAllSupportTypes
 } from "@/enums";
 
 const formSchema = z.object({
@@ -40,9 +37,7 @@ const formSchema = z.object({
   address: z.string().min(5, "Địa chỉ phải có ít nhất 5 ký tự"),
   facebook_link: z.string().url("Link Facebook không hợp lệ").optional().or(z.literal("")),
   support_types: z.array(z.nativeEnum(SupportType)).min(1, "Vui lòng chọn ít nhất một loại hỗ trợ"),
-  support_frequency: z.nativeEnum(SupportFrequency, {
-    required_error: "Vui lòng chọn mức độ hỗ trợ",
-  }),
+
   support_details: z.string().optional(),
   
   // Support-specific fields
@@ -107,11 +102,7 @@ const supportTypeOptions = getAllSupportTypes().map((type) => ({
   label: supportTypeLabels[type],
 }));
 
-const supportFrequencyOptions = getAllSupportFrequencies().map((frequency) => ({
-  value: frequency,
-  label: supportFrequencyLabels[frequency],
-  description: supportFrequencyDescriptions[frequency],
-}));
+
 
 export function DonorRegistrationForm({ onSuccess, onCancel }: DonorRegistrationFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -125,7 +116,7 @@ export function DonorRegistrationForm({ onSuccess, onCancel }: DonorRegistration
       address: "",
       facebook_link: "",
       support_types: [],
-      support_frequency: SupportFrequency.ONE_TIME,
+
       support_details: "",
       laptop_quantity: 1,
       motorbike_quantity: 1,
@@ -148,7 +139,7 @@ export function DonorRegistrationForm({ onSuccess, onCancel }: DonorRegistration
         address: values.address,
         facebook_link: values.facebook_link || null,
         support_types: values.support_types,
-        support_frequency: values.support_frequency,
+
         support_details: values.support_details || null,
         laptop_quantity: values.laptop_quantity || null,
         motorbike_quantity: values.motorbike_quantity || null,
@@ -302,35 +293,7 @@ export function DonorRegistrationForm({ onSuccess, onCancel }: DonorRegistration
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="support_frequency"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Mức độ hỗ trợ *</FormLabel>
-                    <FormControl>
-                      <RadioGroup
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                        className="space-y-2"
-                      >
-                        {supportFrequencyOptions.map((option) => (
-                          <div key={option.value} className="flex items-center space-x-3">
-                            <RadioGroupItem value={option.value} id={option.value} />
-                            <FormLabel htmlFor={option.value} className="font-normal cursor-pointer">
-                              <div>
-                                <div className="font-medium">{option.label}</div>
-                                <div className="text-sm text-muted-foreground">{option.description}</div>
-                              </div>
-                            </FormLabel>
-                          </div>
-                        ))}
-                      </RadioGroup>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+
 
               {/* Support-specific fields */}
               {selectedSupportTypes.includes(SupportType.LAPTOP) && (
