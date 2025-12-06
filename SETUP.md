@@ -38,11 +38,13 @@ Tạo file `.env.local` trong thư mục `connect-uplift`:
 ```env
 VITE_SUPABASE_URL=your_supabase_url
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+VITE_RECAPTCHA_SITE_KEY=your_recaptcha_site_key
 ```
 
 Lấy thông tin này từ:
 - **Local:** Sau khi chạy `supabase start`, CLI sẽ hiển thị URL và anon key
 - **Production:** Vào Supabase Dashboard > Settings > API
+- **reCAPTCHA Site Key:** Lấy từ [Google reCAPTCHA Admin Console](https://www.google.com/recaptcha/admin)
 
 ## Cài đặt Dependencies
 
@@ -198,6 +200,54 @@ npm run dev
 
 See `SEO-SETUP.md` for detailed SEO configuration and optimization guide.
 
+## Cấu hình reCAPTCHA
+
+Hệ thống đã được tích hợp reCAPTCHA v3 để bảo vệ chống spam. Cần cấu hình cả frontend và backend:
+
+### 1. Lấy reCAPTCHA Keys
+
+1. Truy cập [Google reCAPTCHA Admin Console](https://www.google.com/recaptcha/admin)
+2. Tạo một site mới (chọn reCAPTCHA v3)
+3. Thêm domain của bạn (ví dụ: `localhost` cho development, domain thật cho production)
+4. Lấy **Site Key** và **Secret Key**
+
+### 2. Cấu hình Frontend
+
+Thêm Site Key vào file `.env.local`:
+
+```env
+VITE_RECAPTCHA_SITE_KEY=your_site_key_here
+```
+
+### 3. Cấu hình Backend (Secret Key)
+
+Secret key được lưu trong database để bảo mật. Sau khi chạy migrations, cấu hình secret key:
+
+**Cách 1: Qua SQL Editor (Supabase Dashboard)**
+```sql
+UPDATE app_settings 
+SET value = '"YOUR_SECRET_KEY_HERE"'::jsonb 
+WHERE key = 'recaptcha_secret_key';
+```
+
+**Cách 2: Qua Admin Panel (nếu có)**
+- Vào trang Settings (`/cai-dat`)
+- Tìm setting `recaptcha_secret_key`
+- Cập nhật giá trị với secret key của bạn
+
+### 4. Kiểm tra hoạt động
+
+- Nếu secret key chưa được cấu hình: Hệ thống sẽ bỏ qua verification (cho phép development)
+- Nếu secret key đã được cấu hình: Tất cả đơn đăng ký sẽ được verify tự động
+- Nếu verification thất bại: Đơn đăng ký sẽ bị từ chối với thông báo lỗi
+
+### 5. Lưu ý
+
+- Secret key chỉ được lưu trong database, không expose ra frontend
+- Verification được thực hiện tự động qua database trigger
+- Score threshold mặc định là 0.5 (có thể điều chỉnh trong function `verify_recaptcha_token`)
+- Trong development, nếu không có secret key, hệ thống vẫn cho phép submit (với warning)
+
 ## Lưu ý
 
 - Form validation đã được cài đặt đầy đủ theo requirements
@@ -209,3 +259,4 @@ See `SEO-SETUP.md` for detailed SEO configuration and optimization guide.
 - Admin panel yêu cầu authentication để quản lý
 - Cần cấu hình admin role riêng trong production để hạn chế quyền truy cập
 - **SEO:** Public pages được tối ưu cho search engines với meta tags đầy đủ
+- **reCAPTCHA:** Đã tích hợp reCAPTCHA v3 để bảo vệ chống spam (cần cấu hình secret key)
