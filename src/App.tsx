@@ -8,6 +8,7 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import PublicHome from "./pages/PublicHome";
 import PublicDonorRegistration from "./pages/PublicDonorRegistration";
 import PublicStudentRegistration from "./pages/PublicStudentRegistration";
+import PublicLaptopBank from "./pages/PublicLaptopBank";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Applications from "./pages/Applications";
@@ -36,6 +37,7 @@ const App = () => (
             <Route path="/" element={<PublicHome />} />
             <Route path="/dang-ky-nha-hao-tam" element={<PublicDonorRegistration />} />
             <Route path="/dang-ky-sinh-vien" element={<PublicStudentRegistration />} />
+            <Route path="/ngan-hang-laptop" element={<PublicLaptopBank />} />
             <Route path="/auth" element={<Auth />} />
 
             {/* Admin Routes - Authentication required */}

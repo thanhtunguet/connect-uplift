@@ -26,6 +26,19 @@ export interface LaptopData {
   student_name?: string;
 }
 
+// Public laptop data (without sensitive donor/student info)
+export interface PublicLaptopData {
+  id: string;
+  brand: string | null;
+  model: string | null;
+  specifications: string | null;
+  condition: string | null;
+  notes: string | null;
+  status: string;
+  received_date: string;
+  created_at: string;
+}
+
 interface InventoryFilters {
   search?: string;
   status?: string | "all";
@@ -174,6 +187,119 @@ export function useLaptop(id: string | null) {
       } as LaptopData;
     },
     enabled: !!id,
+  });
+}
+
+// Public hook for fetching available laptops (no sensitive info)
+interface PublicLaptopsResult {
+  data: PublicLaptopData[];
+  totalCount: number;
+  totalPages: number;
+}
+
+export function usePublicLaptops(filters: { search?: string; page?: number; pageSize?: number } = {}) {
+  return useQuery({
+    queryKey: ["public-laptops", filters],
+    queryFn: async (): Promise<PublicLaptopsResult> => {
+      const { page = 1, pageSize = 12 } = filters;
+      
+      // Only fetch available laptops, no donor/student info
+      // Use a specific column for count to avoid RLS issues with select("*")
+      let countQuery = supabase
+        .from("laptops")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "available");
+
+      // Apply search filter to count query
+      if (filters.search && filters.search.trim()) {
+        const searchTerm = `%${filters.search.trim()}%`;
+        countQuery = countQuery.or(
+          `brand.ilike.${searchTerm},model.ilike.${searchTerm},specifications.ilike.${searchTerm},notes.ilike.${searchTerm}`
+        );
+      }
+
+      const { count, error: countError } = await countQuery;
+
+      if (countError) {
+        console.error("Error fetching public laptops count:", countError);
+        console.error("Count query details:", { 
+          status: "available",
+          search: filters.search,
+          errorCode: countError.code,
+          errorMessage: countError.message,
+          errorDetails: countError.details,
+          errorHint: countError.hint
+        });
+        throw countError;
+      }
+
+      // Get the actual data with pagination (only public fields)
+      let query = supabase
+        .from("laptops")
+        .select("id, brand, model, specifications, condition, notes, status, received_date, created_at")
+        .eq("status", "available")
+        .order("created_at", { ascending: false });
+
+      // Apply search filter
+      if (filters.search && filters.search.trim()) {
+        const searchTerm = `%${filters.search.trim()}%`;
+        query = query.or(
+          `brand.ilike.${searchTerm},model.ilike.${searchTerm},specifications.ilike.${searchTerm},notes.ilike.${searchTerm}`
+        );
+      }
+
+      // Apply pagination
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+      query = query.range(from, to);
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error("Error fetching public laptops:", error);
+        console.error("Data query details:", {
+          status: "available",
+          search: filters.search,
+          page,
+          pageSize,
+          from,
+          to,
+          errorCode: error.code,
+          errorMessage: error.message,
+          errorDetails: error.details,
+          errorHint: error.hint
+        });
+        throw error;
+      }
+
+      console.log("Public laptops query result:", {
+        count: data?.length || 0,
+        totalCount: count,
+        page,
+        pageSize
+      });
+
+      const transformedData = (data || []).map((laptop: any) => ({
+        id: laptop.id,
+        brand: laptop.brand,
+        model: laptop.model,
+        specifications: laptop.specifications,
+        condition: laptop.condition,
+        notes: laptop.notes,
+        status: laptop.status,
+        received_date: laptop.received_date,
+        created_at: laptop.created_at,
+      })) as PublicLaptopData[];
+
+      const totalCount = count || 0;
+      const totalPages = Math.ceil(totalCount / pageSize);
+
+      return {
+        data: transformedData,
+        totalCount,
+        totalPages,
+      };
+    },
   });
 }
 

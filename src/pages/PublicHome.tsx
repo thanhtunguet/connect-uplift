@@ -127,6 +127,48 @@ export default function PublicHome() {
                                                 </div>
                                                 </section>
 
+  {/* Laptop Bank Card */ }
+  <section className="container pb-12 md:pb-24" >
+    <div className="max-w-5xl mx-auto" >
+      <Card className="border-2 border-primary/30 hover:border-primary transition-colors bg-gradient-to-br from-primary/5 to-primary/10" >
+        <CardHeader>
+        <div className="flex items-center gap-2 mb-2" >
+          <div className="p-2 rounded-lg bg-primary/20" >
+            <Laptop className="h-6 w-6 text-primary" />
+              </div>
+              < CardTitle className = "text-2xl" > Ngân hàng laptop </CardTitle>
+                </div>
+                < CardDescription className = "text-base" >
+                  Xem danh sách laptop đang sẵn sàng để tặng cho sinh viên có hoàn cảnh khó khăn.
+                  Tất cả laptop đã được kiểm tra và sửa chữa, sẵn sàng trao tặng.
+              </CardDescription>
+                      </CardHeader>
+                      < CardContent className = "space-y-4" >
+                        <div className="space-y-2 text-sm text-muted-foreground" >
+                          <p className="flex items-start gap-2" >
+                            <span className="text-primary mt-1" >✓</span>
+                              < span > Danh sách laptop công khai, minh bạch </span>
+                                </p>
+                                < p className = "flex items-start gap-2" >
+                                  <span className="text-primary mt-1" >✓</span>
+                                    < span > Laptop đã được kiểm tra và sửa chữa </span>
+                                      </p>
+                                      < p className = "flex items-start gap-2" >
+                                        <span className="text-primary mt-1" >✓</span>
+                                          < span > Thông tin chi tiết về hãng, model, thông số kỹ thuật </span>
+                                            </p>
+                                            </div>
+                                            < Link to = "/ngan-hang-laptop" className = "block" >
+                                              <Button className="w-full" size = "lg" variant = "default" >
+                                                Xem ngân hàng laptop
+                                                  < ArrowRight className = "ml-2 h-4 w-4" />
+                                                    </Button>
+                                                    </Link>
+                                                    </CardContent>
+                                                    </Card>
+                                                    </div>
+                                                    </section>
+
   {/* Core Principles Banner */ }
   <section className="container pb-12 md:pb-24" >
     <div className="mx-auto max-w-5xl" >
