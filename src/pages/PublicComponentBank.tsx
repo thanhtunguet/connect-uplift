@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { DataPagination } from "@/components/ui/data-pagination";
-import { Search, Wrench, AlertCircle, ExternalLink, MapPin, Phone, Copy, CheckCircle2 } from "lucide-react";
+import { Search, Wrench, AlertCircle, ExternalLink, MapPin, Phone, Copy, CheckCircle2, HandHeart } from "lucide-react";
 import { Link } from "react-router-dom";
 import { SEO } from "@/components/SEO";
 import { usePublicComponents } from "@/hooks/useInventory";
@@ -13,10 +13,18 @@ import { usePagination } from "@/hooks/usePagination";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
 import { toast } from "sonner";
+import { ComponentSupportForm } from "@/components/forms/ComponentSupportForm";
+import { ReCaptchaProvider } from "@/components/captcha/ReCaptchaProvider";
 
 export default function PublicComponentBank() {
   const [searchTerm, setSearchTerm] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [supportFormOpen, setSupportFormOpen] = useState(false);
+  const [selectedComponent, setSelectedComponent] = useState<{
+    id: string;
+    code: number | null;
+    type: string;
+  } | null>(null);
   const pagination = usePagination({ initialPageSize: 12 });
 
   const {
@@ -270,11 +278,29 @@ export default function PublicComponentBank() {
                         </div>
                       )}
 
-                      <div className="pt-2 border-t text-xs text-muted-foreground">
-                        <p>
-                          Ngày đăng:{" "}
-                          {format(new Date(component.received_date), "dd/MM/yyyy", { locale: vi })}
-                        </p>
+                      <div className="pt-2 border-t space-y-3">
+                        <div className="text-xs text-muted-foreground">
+                          <p>
+                            Ngày đăng:{" "}
+                            {format(new Date(component.received_date), "dd/MM/yyyy", { locale: vi })}
+                          </p>
+                        </div>
+                        
+                        {/* Support Button */}
+                        <Button
+                          className="w-full"
+                          onClick={() => {
+                            setSelectedComponent({
+                              id: component.id,
+                              code: component.component_code,
+                              type: component.component_type,
+                            });
+                            setSupportFormOpen(true);
+                          }}
+                        >
+                          <HandHeart className="mr-2 h-4 w-4" />
+                          Nhận hỗ trợ
+                        </Button>
                       </div>
                     </CardContent>
                   </Card>
@@ -298,6 +324,28 @@ export default function PublicComponentBank() {
           )}
         </div>
       </section>
+
+      {/* Component Support Form */}
+      {selectedComponent && (
+        <ReCaptchaProvider siteKey={import.meta.env.VITE_RECAPTCHA_SITE_KEY || ""}>
+          <ComponentSupportForm
+            open={supportFormOpen}
+            onOpenChange={(open) => {
+              setSupportFormOpen(open);
+              if (!open) {
+                setSelectedComponent(null);
+              }
+            }}
+            componentId={selectedComponent.id}
+            componentCode={selectedComponent.code}
+            componentType={selectedComponent.type}
+            onSuccess={() => {
+              // Refresh the component list
+              window.location.reload();
+            }}
+          />
+        </ReCaptchaProvider>
+      )}
 
       {/* Footer */}
       <footer className="border-t py-8 bg-muted/50 mt-12">

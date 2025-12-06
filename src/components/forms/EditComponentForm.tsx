@@ -55,7 +55,7 @@ const formSchema = z
     ).optional().or(z.literal("")),
     delivery_address: z.string().optional(),
     delivery_phone: z.string().optional(),
-    status: z.enum(["needs_support", "supported", "available", "assigned", "delivered", "installed"]),
+    status: z.enum(["needs_support", "pending_support", "supported", "available", "assigned", "delivered", "installed"]),
     received_date: z.string().min(1, "Vui lòng chọn ngày nhận"),
   })
   .superRefine((data, ctx) => {
@@ -364,6 +364,7 @@ export function EditComponentForm({
                           </FormControl>
                           <SelectContent>
                             <SelectItem value="needs_support">Cần hỗ trợ</SelectItem>
+                            <SelectItem value="pending_support">Chờ hỗ trợ</SelectItem>
                             <SelectItem value="supported">Đã được hỗ trợ</SelectItem>
                             <SelectItem value="available">Sẵn sàng</SelectItem>
                             <SelectItem value="assigned">Đã phân</SelectItem>

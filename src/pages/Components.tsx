@@ -38,6 +38,7 @@ import { vi } from "date-fns/locale";
 
 const statusLabels: Record<string, string> = {
   needs_support: "Cần hỗ trợ",
+  pending_support: "Chờ hỗ trợ",
   supported: "Đã được hỗ trợ",
   available: "Sẵn sàng",
   assigned: "Đã phân",
@@ -47,6 +48,7 @@ const statusLabels: Record<string, string> = {
 
 const statusColors: Record<string, "approved" | "pending" | "rejected"> = {
   needs_support: "pending",
+  pending_support: "pending",
   supported: "approved",
   available: "approved",
   assigned: "pending",
@@ -81,6 +83,7 @@ export default function Components() {
   const stats = [
     { label: "Tổng linh kiện", value: totalCount },
     { label: "Cần hỗ trợ", value: components.filter(c => c.status === "needs_support").length },
+    { label: "Chờ hỗ trợ", value: components.filter(c => c.status === "pending_support").length },
     { label: "Đã được hỗ trợ", value: components.filter(c => c.status === "supported").length },
     { label: "Sẵn sàng", value: components.filter(c => c.status === "available").length },
   ];
@@ -123,6 +126,7 @@ export default function Components() {
             <SelectContent>
               <SelectItem value="all">Tất cả</SelectItem>
               <SelectItem value="needs_support">Cần hỗ trợ</SelectItem>
+              <SelectItem value="pending_support">Chờ hỗ trợ</SelectItem>
               <SelectItem value="supported">Đã được hỗ trợ</SelectItem>
               <SelectItem value="available">Sẵn sàng</SelectItem>
               <SelectItem value="assigned">Đã phân</SelectItem>
