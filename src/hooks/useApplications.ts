@@ -6,12 +6,10 @@ import type { ApplicationStatus } from "@/types/applications";
 export interface DonorApplicationData {
   id: string;
   full_name: string;
-  birth_year: number;
   phone: string;
   address: string;
   facebook_link: string | null;
   support_types: string[];
-  support_frequency: string;
   support_details: string | null;
   laptop_quantity: number | null;
   motorbike_quantity: number | null;
@@ -279,7 +277,6 @@ export function useUpdateApplicationStatus() {
           const donorData = {
             application_id: applicationData.id,
             full_name: applicationData.full_name,
-            birth_year: applicationData.birth_year,
             phone: applicationData.phone,
             address: applicationData.address,
             facebook_link: applicationData.facebook_link,

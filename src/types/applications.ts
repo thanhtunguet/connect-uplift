@@ -10,12 +10,10 @@ export {
 export interface DonorApplication {
   id: string;
   full_name: string;
-  birth_year: number;
   phone: string;
   address: string;
   facebook_link?: string;
   support_types: SupportType[];
-  support_frequency: SupportFrequency;
   support_details?: string;
   status: ApplicationStatus;
   rejection_reason?: string;
@@ -28,12 +26,10 @@ export interface DonorApplication {
 
 export interface DonorApplicationInsert {
   full_name: string;
-  birth_year: number;
   phone: string;
   address: string;
   facebook_link?: string;
   support_types: SupportType[];
-  support_frequency: SupportFrequency;
   support_details?: string;
 }
 
@@ -82,7 +78,6 @@ export interface Donor {
   id: string;
   application_id?: string;
   full_name: string;
-  birth_year: number;
   phone: string;
   address: string;
   facebook_link?: string;

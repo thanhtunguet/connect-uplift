@@ -92,10 +92,6 @@ export function DonorDetailDialog({
                 <p className="font-medium">{donor.full_name}</p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Năm sinh</p>
-                <p className="font-medium">{donor.birth_year}</p>
-              </div>
-              <div>
                 <p className="text-sm text-muted-foreground">Số điện thoại</p>
                 <p className="font-medium">{donor.phone}</p>
               </div>

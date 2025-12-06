@@ -6,7 +6,6 @@ export interface DonorData {
   id: string;
   application_id: string | null;
   full_name: string;
-  birth_year: number;
   phone: string;
   address: string;
   facebook_link: string | null;

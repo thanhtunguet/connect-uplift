@@ -52,7 +52,6 @@ export function DonorSelector({ supportType }: DonorSelectorProps) {
               form.setValue("donor_full_name", "");
               form.setValue("donor_phone", "");
               form.setValue("donor_address", "");
-              form.setValue("donor_birth_year", null);
               form.setValue("donor_facebook_link", "");
               form.setValue("donor_area_id", "");
             } else {
@@ -129,25 +128,6 @@ export function DonorSelector({ supportType }: DonorSelectorProps) {
                 <FormLabel>Họ và tên *</FormLabel>
                 <FormControl>
                   <Input placeholder="Nguyễn Văn A" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="donor_birth_year"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Năm sinh</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    placeholder="Ví dụ: 1985"
-                    {...field}
-                    value={field.value || ""}
-                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>

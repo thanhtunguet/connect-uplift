@@ -38,7 +38,6 @@ const formSchema = z
     // Donor information
     donor_id: z.string().nullable(),
     donor_full_name: z.string().optional(),
-    donor_birth_year: z.coerce.number().nullable().optional(),
     donor_phone: z.string().optional(),
     donor_address: z.string().optional(),
     donor_facebook_link: z.string().optional(),
@@ -100,7 +99,6 @@ export function CreateComponentForm({
     defaultValues: {
       donor_id: null,
       donor_full_name: "",
-      donor_birth_year: null,
       donor_phone: "",
       donor_address: "",
       donor_facebook_link: "",
@@ -126,7 +124,6 @@ export function CreateComponentForm({
           donor: {
             application_id: null,
             full_name: values.donor_full_name!,
-            birth_year: values.donor_birth_year || new Date().getFullYear() - 30,
             phone: values.donor_phone!,
             address: values.donor_address!,
             facebook_link: values.donor_facebook_link || null,
