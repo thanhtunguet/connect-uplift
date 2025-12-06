@@ -6,8 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
-import { Laptop, Loader2, Mail, Lock, User, ArrowLeft } from "lucide-react";
+import { useAllowSignups } from "@/hooks/useAppSettings";
+import { Laptop, Loader2, Mail, Lock, User, ArrowLeft, AlertCircle } from "lucide-react";
 import { z } from "zod";
 
 const loginSchema = z.object({
@@ -33,6 +35,7 @@ export default function Auth() {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
+  const { allowSignups, isLoading: isLoadingSetting } = useAllowSignups();
 
   const from = location.state?.from?.pathname || "/admin";
 
@@ -76,6 +79,16 @@ export default function Auth() {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Check if signups are allowed
+    if (!allowSignups) {
+      toast({
+        variant: "destructive",
+        title: "Đăng ký không khả dụng",
+        description: "Tính năng đăng ký tài khoản mới hiện đang bị tắt. Vui lòng liên hệ quản trị viên.",
+      });
+      return;
+    }
 
     const validation = signupSchema.safeParse({
       fullName: signupName,
@@ -140,7 +153,7 @@ export default function Auth() {
                 <Tabs defaultValue="login" className = "w-full" >
                   <TabsList className="grid w-full grid-cols-2" >
                     <TabsTrigger value="login" > Đăng nhập </TabsTrigger>
-                      < TabsTrigger value = "signup" > Đăng ký </TabsTrigger>
+                      < TabsTrigger value = "signup" disabled={!allowSignups || isLoadingSetting} > Đăng ký </TabsTrigger>
                         </TabsList>
 
                         < TabsContent value = "login" className = "space-y-4" >
@@ -224,6 +237,14 @@ d = "M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3
   </TabsContent>
 
   < TabsContent value = "signup" className = "space-y-4" >
+    {!allowSignups && !isLoadingSetting && (
+      <Alert variant="destructive">
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription>
+          Tính năng đăng ký tài khoản mới hiện đang bị tắt. Vui lòng liên hệ quản trị viên để được hỗ trợ.
+        </AlertDescription>
+      </Alert>
+    )}
     <form onSubmit={ handleSignup } className = "space-y-4" >
       <div className="space-y-2" >
         <Label htmlFor="signup-name" > Họ và tên </Label>
@@ -270,7 +291,7 @@ required
   />
   </div>
   </div>
-  < Button type = "submit" className = "w-full" disabled = { isLoading } >
+  < Button type = "submit" className = "w-full" disabled = { isLoading || !allowSignups || isLoadingSetting } >
   {
     isLoading?(
                     <Loader2 className = "mr-2 h-4 w-4 animate-spin" />
@@ -293,7 +314,7 @@ required
 variant = "outline"
 className = "w-full"
 onClick = { handleGoogleSignIn }
-disabled = { isLoading }
+disabled = { isLoading || !allowSignups || isLoadingSetting }
   >
   <svg className="mr-2 h-4 w-4" viewBox = "0 0 24 24" >
     <path

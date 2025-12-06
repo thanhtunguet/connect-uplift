@@ -4,14 +4,20 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
-import { LogOut, User, Mail, Calendar } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { LogOut, User, Mail, Calendar, Settings as SettingsIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { useAppSetting, useUpdateAppSetting } from "@/hooks/useAppSettings";
+import { Loader2 } from "lucide-react";
 
 export default function Settings() {
   const { user, signOut } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { data: allowSignupsSetting, isLoading: isLoadingSetting } = useAppSetting("allow_signups");
+  const updateSetting = useUpdateAppSetting();
 
   const handleSignOut = async () => {
     await signOut();
@@ -33,6 +39,18 @@ export default function Settings() {
   };
 
   const fullName = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email;
+
+  // Parse allow_signups value
+  const allowSignups = allowSignupsSetting?.value === true || 
+                       (typeof allowSignupsSetting?.value === "string" && allowSignupsSetting.value.toLowerCase() === "true") ||
+                       Boolean(allowSignupsSetting?.value);
+
+  const handleToggleSignups = async (checked: boolean) => {
+    await updateSetting.mutateAsync({
+      key: "allow_signups",
+      value: checked,
+    });
+  };
 
   return (
     <MainLayout title="Cài đặt" description="Quản lý tài khoản và cài đặt hệ thống">
@@ -101,8 +119,41 @@ export default function Settings() {
           </CardContent>
         </Card>
 
+        {/* System Settings Card */}
+        <Card className="animate-slide-up" style={{ animationDelay: "100ms" }}>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <SettingsIcon className="h-5 w-5" />
+              Cài đặt hệ thống
+            </CardTitle>
+            <CardDescription>Quản lý các cài đặt chung của ứng dụng</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="allow-signups" className="text-base">
+                  Cho phép đăng ký tài khoản mới
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  Khi bật, người dùng có thể đăng ký tài khoản mới. Khi tắt, chỉ có thể đăng nhập với tài khoản đã tồn tại.
+                </p>
+              </div>
+              {isLoadingSetting ? (
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              ) : (
+                <Switch
+                  id="allow-signups"
+                  checked={allowSignups}
+                  onCheckedChange={handleToggleSignups}
+                  disabled={updateSetting.isPending}
+                />
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Logout Card */}
-        <Card className="animate-slide-up border-destructive/20" style={{ animationDelay: "100ms" }}>
+        <Card className="animate-slide-up border-destructive/20" style={{ animationDelay: "200ms" }}>
           <CardHeader>
             <CardTitle className="text-destructive">Đăng xuất</CardTitle>
             <CardDescription>
