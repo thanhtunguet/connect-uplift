@@ -8,6 +8,7 @@ import { DataPagination } from "@/components/ui/data-pagination";
 import { Search, GraduationCap, AlertCircle, HandHeart, MapPin, Calendar, BookOpen, Heart } from "lucide-react";
 import { Link } from "react-router-dom";
 import { SEO } from "@/components/SEO";
+import { PublicHeader } from "@/components/layout/PublicHeader";
 import { usePublicStudents } from "@/hooks/useStudents";
 import { usePagination } from "@/hooks/usePagination";
 import { format } from "date-fns";
@@ -93,18 +94,7 @@ export default function PublicStudents() {
         keywords="sinh viên, hỗ trợ sinh viên, danh sách sinh viên, ăn mày laptop, laptop, xe máy, học phí, linh kiện"
       />
       
-      {/* Header */}
-      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 items-center justify-between">
-          <Link to="/" className="flex items-center gap-2">
-            <GraduationCap className="h-6 w-6" />
-            <h1 className="text-xl font-bold">Ăn mày laptop</h1>
-          </Link>
-          <Link to="/auth">
-            <Button variant="ghost">Đăng nhập(Admin)</Button>
-          </Link>
-        </div>
-      </header>
+      <PublicHeader />
 
       {/* Hero Section */}
       <section className="container py-8 md:py-12">

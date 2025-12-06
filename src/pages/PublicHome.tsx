@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Heart, Laptop, GraduationCap, ArrowRight, Wrench, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import { SEO } from "@/components/SEO";
+import { PublicHeader } from "@/components/layout/PublicHeader";
 
 export default function PublicHome() {
   return (
@@ -12,18 +13,7 @@ export default function PublicHome() {
   description = "Hoạt động thiện nguyện thu gom laptop cũ, sửa chữa và tặng cho sinh viên có hoàn cảnh khó khăn. Kết nối nhà hảo tâm với sinh viên cần hỗ trợ laptop, xe máy, linh kiện và học phí."
   keywords = "từ thiện, laptop, sinh viên, hỗ trợ, ăn mày laptop, laptop cũ, xe máy, học phí, linh kiện, Trần Trọng An"
     />
-    {/* Header */ }
-    < header className = "border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60" >
-      <div className="container flex h-16 items-center justify-between" >
-        <div className="flex items-center gap-2" >
-          <Laptop className="h-6 w-6" />
-            <h1 className="text-xl font-bold" > Ăn mày laptop </h1>
-              </div>
-              < Link to = "/auth" >
-                <Button variant="ghost" > Đăng nhập(Admin) </Button>
-                  </Link>
-                  </div>
-                  </header>
+    <PublicHeader />
 
   {/* Hero Section */ }
   <section className="container py-12 md:py-24" >
