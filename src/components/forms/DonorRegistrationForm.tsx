@@ -37,10 +37,6 @@ import {
 
 const formSchema = z.object({
   full_name: z.string().min(2, "Họ và tên phải có ít nhất 2 ký tự"),
-  birth_year: z.coerce
-    .number()
-    .min(1940, "Năm sinh không hợp lệ")
-    .max(new Date().getFullYear(), "Năm sinh không hợp lệ"),
   phone: z.string().regex(/^[0-9]{10,11}$/, "Số điện thoại phải có 10-11 chữ số"),
   address: z.string().min(5, "Địa chỉ phải có ít nhất 5 ký tự"),
   facebook_link: z.string().url("Link Facebook không hợp lệ").optional().or(z.literal("")),
@@ -115,13 +111,13 @@ const supportTypeOptions = getAllSupportTypes().map((type) => ({
 
 export function DonorRegistrationForm({ onSuccess, onCancel }: DonorRegistrationFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { data: areas = [], isLoading: isLoadingAreas } = useAreas({ isActive: true });
+  const { data: areasResult, isLoading: isLoadingAreas } = useAreas({ isActive: true });
+  const areas = areasResult?.data ?? [];
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       full_name: "",
-      birth_year: null,
       phone: "",
       address: "",
       facebook_link: "",
@@ -132,7 +128,7 @@ export function DonorRegistrationForm({ onSuccess, onCancel }: DonorRegistration
       laptop_quantity: 1,
       motorbike_quantity: 1,
       components_quantity: 1,
-      tuition_amount: null,
+      tuition_amount: undefined,
       tuition_frequency: SupportFrequency.ONE_TIME,
     },
   });
@@ -145,7 +141,6 @@ export function DonorRegistrationForm({ onSuccess, onCancel }: DonorRegistration
     try {
       const { error } = await supabase.from("donor_applications").insert({
         full_name: values.full_name,
-        birth_year: values.birth_year,
         phone: values.phone,
         address: values.address,
         facebook_link: values.facebook_link || null,
@@ -198,20 +193,6 @@ export function DonorRegistrationForm({ onSuccess, onCancel }: DonorRegistration
                     <FormLabel>Họ và tên *</FormLabel>
                     <FormControl>
                       <Input placeholder="Nguyễn Văn A" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="birth_year"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Năm sinh</FormLabel>
-                    <FormControl>
-                      <Input type="number" placeholder="Ghi năm sinh cho tiện xưng hô, bỏ qua nếu không cần" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -410,7 +391,15 @@ export function DonorRegistrationForm({ onSuccess, onCancel }: DonorRegistration
                       <FormItem>
                         <FormLabel>Số tiền hỗ trợ (VNĐ) *</FormLabel>
                         <FormControl>
-                          <Input type="number" min="100000" step="50000" placeholder="Ví dụ: 1000000" {...field} />
+                          <Input 
+                            type="number" 
+                            min="100000" 
+                            step="50000" 
+                            placeholder="Ví dụ: 1000000" 
+                            {...field}
+                            value={field.value ?? ""}
+                            onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                          />
                         </FormControl>
                         <FormDescription>Số tiền bạn có thể hỗ trợ cho học phí (tối thiểu 100,000 VNĐ)</FormDescription>
                         <FormMessage />

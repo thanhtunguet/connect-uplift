@@ -10,6 +10,7 @@ export enum AcademicYear {
   YEAR_2 = "2",
   YEAR_3 = "3",
   YEAR_4 = "4",
+  YEAR_5_PLUS = "5+",
 }
 
 // Support Types enum (consolidated from supportType and needOptions)
@@ -40,6 +41,7 @@ export const academicYearLabels: Record<AcademicYear, string> = {
   [AcademicYear.YEAR_2]: "Năm 2",
   [AcademicYear.YEAR_3]: "Năm 3",
   [AcademicYear.YEAR_4]: "Năm 4",
+  [AcademicYear.YEAR_5_PLUS]: "Năm 5 trở lên",
 };
 
 export const supportTypeLabels: Record<SupportType, string> = {

@@ -54,19 +54,11 @@ const formSchema = z.object({
   need_laptop: z.boolean(),
   need_motorbike: z.boolean(),
   need_tuition: z.boolean(),
-  need_components: z.boolean(),
-  components_details: z.string().optional(),
 }).refine(
-  (data) => data.need_laptop || data.need_motorbike || data.need_tuition || data.need_components,
+  (data) => data.need_laptop || data.need_motorbike || data.need_tuition,
   {
     message: "Vui lòng chọn ít nhất một loại nhu cầu hỗ trợ",
     path: ["need_laptop"],
-  }
-).refine(
-  (data) => !data.need_components || (data.need_components && data.components_details),
-  {
-    message: "Vui lòng mô tả chi tiết linh kiện cần hỗ trợ",
-    path: ["components_details"],
   }
 );
 
@@ -86,18 +78,18 @@ const needOptions = [
   { name: "need_laptop" as const, supportType: SupportType.LAPTOP, label: supportTypeLabels[SupportType.LAPTOP], description: supportTypeDescriptions[SupportType.LAPTOP] },
   { name: "need_motorbike" as const, supportType: SupportType.MOTORBIKE, label: supportTypeLabels[SupportType.MOTORBIKE], description: supportTypeDescriptions[SupportType.MOTORBIKE] },
   { name: "need_tuition" as const, supportType: SupportType.TUITION, label: supportTypeLabels[SupportType.TUITION], description: supportTypeDescriptions[SupportType.TUITION] },
-  { name: "need_components" as const, supportType: SupportType.COMPONENTS, label: supportTypeLabels[SupportType.COMPONENTS], description: supportTypeDescriptions[SupportType.COMPONENTS] },
 ];
 
 export function StudentRegistrationForm({ onSuccess, onCancel }: StudentRegistrationFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { data: areas = [], isLoading: isLoadingAreas } = useAreas({ isActive: true });
+  const { data: areasResult, isLoading: isLoadingAreas } = useAreas({ isActive: true });
+  const areas = areasResult?.data ?? [];
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       full_name: "",
-      birth_year: null,
+      birth_year: undefined,
       phone: "",
       address: "",
       facebook_link: "",
@@ -107,12 +99,8 @@ export function StudentRegistrationForm({ onSuccess, onCancel }: StudentRegistra
       need_laptop: false,
       need_motorbike: false,
       need_tuition: false,
-      need_components: false,
-      components_details: "",
     },
   });
-
-  const needComponents = form.watch("need_components");
 
   const onSubmit = async (values: FormValues) => {
     setIsSubmitting(true);
@@ -129,8 +117,6 @@ export function StudentRegistrationForm({ onSuccess, onCancel }: StudentRegistra
         need_laptop: values.need_laptop,
         need_motorbike: values.need_motorbike,
         need_tuition: values.need_tuition,
-        need_components: values.need_components,
-        components_details: values.components_details || null,
         status: ApplicationStatus.PENDING,
       });
 
@@ -184,7 +170,13 @@ export function StudentRegistrationForm({ onSuccess, onCancel }: StudentRegistra
                   <FormItem>
                     <FormLabel>Năm sinh *</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="Điền năm sinh của em" {...field} />
+                      <Input 
+                        type="number" 
+                        placeholder="Điền năm sinh của em" 
+                        {...field}
+                        value={field.value ?? ""}
+                        onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -361,28 +353,6 @@ export function StudentRegistrationForm({ onSuccess, onCancel }: StudentRegistra
                   />
                 ))}
               </div>
-
-              {needComponents && (
-                <FormField
-                  control={form.control}
-                  name="components_details"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Chi tiết linh kiện cần hỗ trợ *</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Ví dụ: Laptop Dell Latitude E7450 cần thay pin và ổ cứng..."
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Mô tả chi tiết laptop hiện tại và linh kiện cần sửa chữa
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
 
               <FormMessage>{form.formState.errors.need_laptop?.message}</FormMessage>
             </div>
