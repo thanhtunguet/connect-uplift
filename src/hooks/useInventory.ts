@@ -15,6 +15,7 @@ export interface LaptopData {
   specifications: string | null;
   condition: string | null;
   notes: string | null;
+  image_url: string | null;
   status: string;
   received_date: string;
   assigned_date: string | null;
@@ -34,6 +35,7 @@ export interface PublicLaptopData {
   specifications: string | null;
   condition: string | null;
   notes: string | null;
+  image_url: string | null;
   status: string;
   received_date: string;
   created_at: string;
@@ -236,7 +238,7 @@ export function usePublicLaptops(filters: { search?: string; page?: number; page
       // Get the actual data with pagination (only public fields)
       let query = supabase
         .from("laptops")
-        .select("id, brand, model, specifications, condition, notes, status, received_date, created_at")
+        .select("id, brand, model, specifications, condition, notes, image_url, status, received_date, created_at")
         .eq("status", "available")
         .order("created_at", { ascending: false });
 
@@ -286,6 +288,7 @@ export function usePublicLaptops(filters: { search?: string; page?: number; page
         specifications: laptop.specifications,
         condition: laptop.condition,
         notes: laptop.notes,
+        image_url: laptop.image_url,
         status: laptop.status,
         received_date: laptop.received_date,
         created_at: laptop.created_at,

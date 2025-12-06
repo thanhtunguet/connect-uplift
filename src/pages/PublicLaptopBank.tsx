@@ -153,25 +153,50 @@ export default function PublicLaptopBank() {
                 Tìm thấy {totalCount} laptop{totalCount > 1 ? "s" : ""} sẵn sàng
               </div>
               <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {laptops.map((laptop) => (
-                  <Card
-                    key={laptop.id}
-                    className="flex flex-col hover:shadow-lg transition-shadow border-2 hover:border-primary/50"
-                  >
-                    <CardHeader className="pb-3">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1 min-w-0">
-                          <CardTitle className="text-lg font-bold truncate">
-                            {laptop.brand || "Chưa cập nhật"}
-                          </CardTitle>
-                          <CardDescription className="text-sm mt-1 truncate">
-                            {laptop.model || "Chưa có model"}
-                          </CardDescription>
+                {laptops.map((laptop) => {
+                  const imageUrl = (laptop as any).image_url;
+                  return (
+                    <Card
+                      key={laptop.id}
+                      className="flex flex-col hover:shadow-lg transition-shadow border-2 hover:border-primary/50 overflow-hidden"
+                    >
+                      {/* Image Section */}
+                      <div className="relative w-full h-48 bg-muted flex items-center justify-center overflow-hidden">
+                        {imageUrl ? (
+                          <img
+                            src={imageUrl}
+                            alt={`${laptop.brand} ${laptop.model}`}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              // Fallback to icon if image fails to load
+                              e.currentTarget.style.display = "none";
+                              const parent = e.currentTarget.parentElement;
+                              if (parent) {
+                                parent.innerHTML = `<div class="w-full h-full flex items-center justify-center"><svg class="h-16 w-16 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg></div>`;
+                              }
+                            }}
+                          />
+                        ) : (
+                          <Laptop className="h-16 w-16 text-muted-foreground/50" />
+                        )}
+                        <div className="absolute top-2 right-2">
+                          <CheckCircle2 className="h-5 w-5 text-green-500 bg-white rounded-full" />
                         </div>
-                        <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0" />
                       </div>
-                    </CardHeader>
-                    <CardContent className="flex-1 flex flex-col space-y-3">
+
+                      <CardHeader className="pb-3">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <CardTitle className="text-lg font-bold truncate">
+                              {laptop.brand || "Chưa cập nhật"}
+                            </CardTitle>
+                            <CardDescription className="text-sm mt-1 truncate">
+                              {laptop.model || "Chưa có model"}
+                            </CardDescription>
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="flex-1 flex flex-col space-y-3">
                       {laptop.specifications && (
                         <div>
                           <p className="text-xs font-medium text-muted-foreground mb-1">
@@ -212,7 +237,8 @@ export default function PublicLaptopBank() {
                       </div>
                     </CardContent>
                   </Card>
-                ))}
+                  );
+                })}
               </div>
 
               {/* Pagination */}

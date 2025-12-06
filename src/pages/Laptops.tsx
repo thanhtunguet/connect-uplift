@@ -28,12 +28,13 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { DataPagination } from "@/components/ui/data-pagination";
-import { Search, Filter, MoreHorizontal, Eye, Edit, Trash2, Plus, Laptop, AlertCircle } from "lucide-react";
+import { Search, Filter, MoreHorizontal, Eye, Edit, Trash2, Plus, Laptop, AlertCircle, Upload } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useLaptops } from "@/hooks/useInventory";
 import { usePagination } from "@/hooks/usePagination";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
+import { EditLaptopForm } from "@/components/forms/EditLaptopForm";
 
 const statusLabels: Record<string, string> = {
   available: "Sẵn sàng",
@@ -53,6 +54,8 @@ export default function Laptops() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [selectedLaptopId, setSelectedLaptopId] = useState<string | null>(null);
 
   const pagination = usePagination({ initialPageSize: 10 });
 
@@ -193,8 +196,21 @@ export default function Laptops() {
                         <DropdownMenuItem>
                           <Eye className="mr-2 h-4 w-4" /> Xem chi tiết
                         </DropdownMenuItem>
-                        <DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setSelectedLaptopId(laptop.id);
+                            setEditDialogOpen(true);
+                          }}
+                        >
                           <Edit className="mr-2 h-4 w-4" /> Chỉnh sửa
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setSelectedLaptopId(laptop.id);
+                            setEditDialogOpen(true);
+                          }}
+                        >
+                          <Upload className="mr-2 h-4 w-4" /> Upload ảnh
                         </DropdownMenuItem>
                         <DropdownMenuItem className="text-destructive">
                           <Trash2 className="mr-2 h-4 w-4" /> Xóa
@@ -226,6 +242,17 @@ export default function Laptops() {
       <CreateLaptopForm
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
+      />
+
+      <EditLaptopForm
+        open={editDialogOpen}
+        onOpenChange={(open) => {
+          setEditDialogOpen(open);
+          if (!open) {
+            setSelectedLaptopId(null);
+          }
+        }}
+        laptopId={selectedLaptopId}
       />
     </MainLayout>
   );

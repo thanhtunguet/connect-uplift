@@ -32,6 +32,7 @@ import { Loader2 } from "lucide-react";
 import { useCreateLaptop } from "@/hooks/useInventory";
 import { useCreateDonor } from "@/hooks/useDonors";
 import { DonorSelector } from "./DonorSelector";
+import { ImageUpload } from "@/components/ui/image-upload";
 
 const formSchema = z
   .object({
@@ -48,6 +49,7 @@ const formSchema = z
     specifications: z.string().optional(),
     condition: z.string().optional(),
     notes: z.string().optional(),
+    image_url: z.string().nullable().optional(),
     status: z.enum(["available", "assigned", "delivered", "needs_repair"]),
     received_date: z.string().min(1, "Vui lòng chọn ngày nhận"),
   })
@@ -103,6 +105,7 @@ export function CreateLaptopForm({ open, onOpenChange }: CreateLaptopFormProps) 
       specifications: "",
       condition: "",
       notes: "",
+      image_url: null,
       status: "available",
       received_date: new Date().toISOString().split("T")[0],
     },
@@ -147,6 +150,7 @@ export function CreateLaptopForm({ open, onOpenChange }: CreateLaptopFormProps) 
         specifications: values.specifications || null,
         condition: values.condition || null,
         notes: values.notes || null,
+        image_url: values.image_url || null,
         status: values.status,
         received_date: values.received_date,
         assigned_date: null,
@@ -238,6 +242,23 @@ export function CreateLaptopForm({ open, onOpenChange }: CreateLaptopFormProps) 
                       <Input
                         placeholder="Mới, đã qua sử dụng, cần sửa chữa..."
                         {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="image_url"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Ảnh laptop</FormLabel>
+                    <FormControl>
+                      <ImageUpload
+                        value={field.value || null}
+                        onChange={field.onChange}
                       />
                     </FormControl>
                     <FormMessage />
