@@ -36,6 +36,7 @@ import {
 import { Search, Filter, MoreHorizontal, Eye, Check, X, Plus, AlertCircle } from "lucide-react";
 import { DonorRegistrationForm } from "@/components/forms/DonorRegistrationForm";
 import { StudentRegistrationForm } from "@/components/forms/StudentRegistrationForm";
+import { ReCaptchaProvider } from "@/components/captcha/ReCaptchaProvider";
 import { ApplicationDetailDialog } from "@/components/applications/ApplicationDetailDialog";
 import { RejectApplicationDialog } from "@/components/applications/RejectApplicationDialog";
 import {
@@ -432,10 +433,12 @@ export default function Applications() {
           <DialogHeader>
             <DialogTitle>Đăng ký nhà hảo tâm</DialogTitle>
           </DialogHeader>
-          <DonorRegistrationForm
-            onSuccess={handleFormSuccess}
-            onCancel={() => setIsDonorDialogOpen(false)}
-          />
+          <ReCaptchaProvider siteKey={import.meta.env.VITE_RECAPTCHA_SITE_KEY || ""}>
+            <DonorRegistrationForm
+              onSuccess={handleFormSuccess}
+              onCancel={() => setIsDonorDialogOpen(false)}
+            />
+          </ReCaptchaProvider>
         </DialogContent>
       </Dialog>
 

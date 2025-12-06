@@ -12,6 +12,7 @@ export interface DonorApplicationData {
   support_types: string[];
   support_details: string | null;
   laptop_quantity: number | null;
+  laptop_images: string[] | null;
   motorbike_quantity: number | null;
   components_quantity: number | null;
   tuition_amount: number | null;
@@ -340,20 +341,24 @@ export function useUpdateApplicationStatus() {
             donorRecord = newDonor;
           }
 
-          if (donorError) {
-            console.error("Error creating donor record:", donorError);
-            throw donorError;
-          }
-
           // Create inventory records based on support types and quantities
           const donorId = donorRecord.id;
 
-          // Create laptop records
+          // Create laptop records with image linking
           if (applicationData.support_types.includes('laptop') && applicationData.laptop_quantity) {
-            for (let i = 0; i < applicationData.laptop_quantity; i++) {
+            const laptopImages = applicationData.laptop_images || [];
+            const laptopCount = applicationData.laptop_quantity;
+            
+            for (let i = 0; i < laptopCount; i++) {
+              // Phân phối ảnh: mỗi laptop nhận 1 ảnh, nếu ảnh ít hơn laptop thì lặp lại hoặc để null
+              const imageUrl = laptopImages.length > 0 
+                ? laptopImages[i % laptopImages.length] 
+                : null;
+              
               await supabase.from("laptops").insert({
                 donor_id: donorId,
                 status: 'available',
+                image_url: imageUrl,
                 notes: `Từ nhà hảo tâm: ${applicationData.full_name}`,
               });
             }

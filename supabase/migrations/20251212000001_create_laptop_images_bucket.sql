@@ -24,18 +24,31 @@
 
 -- Drop existing policies if they exist (for re-running migration)
 DROP POLICY IF EXISTS "Authenticated users can upload laptop images" ON storage.objects;
+DROP POLICY IF EXISTS "Public can upload donor application images" ON storage.objects;
 DROP POLICY IF EXISTS "Authenticated users can update laptop images" ON storage.objects;
 DROP POLICY IF EXISTS "Authenticated users can delete laptop images" ON storage.objects;
 DROP POLICY IF EXISTS "Public can view laptop images" ON storage.objects;
 
 -- Policy: Allow authenticated users to upload images
 -- Note: Files are automatically converted to WebP and resized to max 768KB
+-- Allow uploads to both 'laptops' folder (admin) and 'donor-applications' folder (public registration)
 CREATE POLICY "Authenticated users can upload laptop images"
 ON storage.objects FOR INSERT
 TO authenticated
 WITH CHECK (
   bucket_id = 'laptop-images' AND
-  (storage.foldername(name))[1] = 'laptops' AND
+  ((storage.foldername(name))[1] = 'laptops' OR (storage.foldername(name))[1] = 'donor-applications') AND
+  (storage.extension(name) = 'webp')
+);
+
+-- Policy: Allow public (unauthenticated) users to upload images for donor applications
+-- This is needed for the public registration form
+CREATE POLICY "Public can upload donor application images"
+ON storage.objects FOR INSERT
+TO public
+WITH CHECK (
+  bucket_id = 'laptop-images' AND
+  (storage.foldername(name))[1] = 'donor-applications' AND
   (storage.extension(name) = 'webp')
 );
 

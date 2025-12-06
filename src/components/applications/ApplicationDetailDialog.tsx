@@ -3,6 +3,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -77,6 +78,9 @@ export function ApplicationDetailDialog({
               {statusMap[application.status]}
             </StatusBadge>
           </DialogTitle>
+          <DialogDescription>
+            Xem chi tiết thông tin đơn đăng ký {type === "donor" ? "nhà hảo tâm" : "sinh viên"}
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">
@@ -88,10 +92,12 @@ export function ApplicationDetailDialog({
                 <p className="text-sm text-muted-foreground">Họ và tên</p>
                 <p className="font-medium">{application.full_name}</p>
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Năm sinh</p>
-                <p className="font-medium">{application.birth_year}</p>
-              </div>
+              {!isDonor && 'birth_year' in application && (
+                <div>
+                  <p className="text-sm text-muted-foreground">Năm sinh</p>
+                  <p className="font-medium">{application.birth_year}</p>
+                </div>
+              )}
               <div>
                 <p className="text-sm text-muted-foreground">Số điện thoại</p>
                 <p className="font-medium">{application.phone}</p>

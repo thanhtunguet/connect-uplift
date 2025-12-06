@@ -27,6 +27,8 @@ import {
   getAllSupportTypes
 } from "@/enums";
 import { ContactInfoFields } from "./ContactInfoFields";
+import { ImageUploadMultiple } from "@/components/ui/image-upload-multiple";
+import { useReCaptcha } from "@/components/captcha/ReCaptchaProvider";
 
 const formSchema = z.object({
   full_name: z.string().min(2, "Họ và tên phải có ít nhất 2 ký tự"),
@@ -40,10 +42,12 @@ const formSchema = z.object({
   
   // Support-specific fields
   laptop_quantity: z.coerce.number().min(1, "Số lượng phải ít nhất 1").optional(),
+  laptop_images: z.array(z.string().url()).optional(),
   motorbike_quantity: z.coerce.number().min(1, "Số lượng phải ít nhất 1").optional(),
   components_quantity: z.coerce.number().min(1, "Số lượng phải ít nhất 1").optional(),
   tuition_amount: z.coerce.number().min(100000, "Số tiền phải ít nhất 100,000 VNĐ").optional(),
   tuition_frequency: z.nativeEnum(SupportFrequency).optional(),
+  recaptcha_token: z.string().optional(),
 }).superRefine((data, ctx) => {
   // Validate required fields based on support types
   if (data.support_types.includes(SupportType.LAPTOP) && !data.laptop_quantity) {
@@ -104,6 +108,7 @@ const supportTypeOptions = getAllSupportTypes().map((type) => ({
 
 export function DonorRegistrationForm({ onSuccess, onCancel }: DonorRegistrationFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { executeRecaptcha } = useReCaptcha();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -117,10 +122,12 @@ export function DonorRegistrationForm({ onSuccess, onCancel }: DonorRegistration
 
       support_details: "",
       laptop_quantity: 1,
+      laptop_images: [],
       motorbike_quantity: 1,
       components_quantity: 1,
       tuition_amount: undefined,
       tuition_frequency: SupportFrequency.ONE_TIME,
+      recaptcha_token: undefined,
     },
   });
 
@@ -130,6 +137,15 @@ export function DonorRegistrationForm({ onSuccess, onCancel }: DonorRegistration
   const onSubmit = async (values: FormValues) => {
     setIsSubmitting(true);
     try {
+      // Execute reCAPTCHA (invisible)
+      let recaptchaToken = null;
+      try {
+        recaptchaToken = await executeRecaptcha("donor_registration");
+      } catch (error) {
+        console.warn("reCAPTCHA error:", error);
+        // Continue without token if reCAPTCHA fails (for development)
+      }
+
       const { error } = await supabase.from("donor_applications").insert({
         full_name: values.full_name,
         phone: values.phone,
@@ -140,11 +156,13 @@ export function DonorRegistrationForm({ onSuccess, onCancel }: DonorRegistration
 
         support_details: values.support_details || null,
         laptop_quantity: values.laptop_quantity || null,
+        laptop_images: values.laptop_images && values.laptop_images.length > 0 ? values.laptop_images : null,
         motorbike_quantity: values.motorbike_quantity || null,
         components_quantity: values.components_quantity || null,
         tuition_amount: values.tuition_amount || null,
         tuition_frequency: values.tuition_frequency || null,
         status: ApplicationStatus.PENDING,
+        recaptcha_token: recaptchaToken || null,
       });
 
       if (error) throw error;
@@ -225,20 +243,45 @@ export function DonorRegistrationForm({ onSuccess, onCancel }: DonorRegistration
 
               {/* Support-specific fields */}
               {selectedSupportTypes.includes(SupportType.LAPTOP) && (
-                <FormField
-                  control={form.control}
-                  name="laptop_quantity"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Số lượng laptop *</FormLabel>
-                      <FormControl>
-                        <Input type="number" min="1" placeholder="Số lượng laptop có thể hỗ trợ" {...field} />
-                      </FormControl>
-                      <FormDescription>Số lượng laptop bạn có thể hỗ trợ</FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
+                  <FormField
+                    control={form.control}
+                    name="laptop_quantity"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Số lượng laptop *</FormLabel>
+                        <FormControl>
+                          <Input type="number" min="1" placeholder="Số lượng laptop có thể hỗ trợ" {...field} />
+                        </FormControl>
+                        <FormDescription>Số lượng laptop bạn có thể hỗ trợ</FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="laptop_images"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Ảnh laptop (tùy chọn)</FormLabel>
+                        <FormControl>
+                          <ImageUploadMultiple
+                            value={field.value || []}
+                            onChange={field.onChange}
+                            bucket="laptop-images"
+                            folder="donor-applications"
+                            maxImages={5}
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Upload ảnh laptop để giúp chúng tôi đánh giá tình trạng và phù hợp với nhu cầu
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
               )}
 
               {selectedSupportTypes.includes(SupportType.MOTORBIKE) && (
