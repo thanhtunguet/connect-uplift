@@ -30,54 +30,18 @@ import {
 } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
 import { useCreateComponent } from "@/hooks/useInventory";
-import { useCreateDonor } from "@/hooks/useDonors";
-import { DonorSelector } from "./DonorSelector";
 
-const formSchema = z
-  .object({
-    // Donor information
-    donor_id: z.string().nullable(),
-    donor_full_name: z.string().optional(),
-    donor_phone: z.string().optional(),
-    donor_address: z.string().optional(),
-    donor_facebook_link: z.string().optional(),
-
-    // Component information
-    component_type: z.string().min(1, "Vui lòng nhập loại linh kiện"),
-    brand: z.string().optional(),
-    model: z.string().optional(),
-    specifications: z.string().optional(),
-    condition: z.string().optional(),
-    notes: z.string().optional(),
-    status: z.enum(["available", "assigned", "delivered", "installed"]),
-    received_date: z.string().min(1, "Vui lòng chọn ngày nhận"),
-  })
-  .superRefine((data, ctx) => {
-    // If donor_id is null, require donor information
-    if (!data.donor_id) {
-      if (!data.donor_full_name || data.donor_full_name.trim() === "") {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Vui lòng nhập họ và tên nhà hảo tâm",
-          path: ["donor_full_name"],
-        });
-      }
-      if (!data.donor_phone || data.donor_phone.trim() === "") {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Vui lòng nhập số điện thoại nhà hảo tâm",
-          path: ["donor_phone"],
-        });
-      }
-      if (!data.donor_address || data.donor_address.trim() === "") {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Vui lòng nhập địa chỉ nhà hảo tâm",
-          path: ["donor_address"],
-        });
-      }
-    }
-  });
+const formSchema = z.object({
+  // Component information
+  component_type: z.string().min(1, "Vui lòng nhập loại linh kiện"),
+  brand: z.string().optional(),
+  model: z.string().optional(),
+  specifications: z.string().optional(),
+  condition: z.string().optional(),
+  notes: z.string().optional(),
+  status: z.enum(["needs_support", "available", "assigned", "delivered", "installed"]),
+  received_date: z.string().min(1, "Vui lòng chọn ngày nhận"),
+});
 
 type FormValues = z.infer<typeof formSchema>;
 
@@ -92,23 +56,17 @@ export function CreateComponentForm({
 }: CreateComponentFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const createComponent = useCreateComponent();
-  const createDonor = useCreateDonor();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      donor_id: null,
-      donor_full_name: "",
-      donor_phone: "",
-      donor_address: "",
-      donor_facebook_link: "",
       component_type: "",
       brand: "",
       model: "",
       specifications: "",
       condition: "",
       notes: "",
-      status: "available",
+      status: "needs_support",
       received_date: new Date().toISOString().split("T")[0],
     },
   });
@@ -116,36 +74,9 @@ export function CreateComponentForm({
   const onSubmit = async (values: FormValues) => {
     setIsSubmitting(true);
     try {
-      let donorId = values.donor_id;
-
-      // Create new donor if needed
-      if (!donorId) {
-        const newDonor = await createDonor.mutateAsync({
-          donor: {
-            application_id: null,
-            full_name: values.donor_full_name!,
-            phone: values.donor_phone!,
-            address: values.donor_address!,
-            facebook_link: values.donor_facebook_link || null,
-            support_types: ["components"],
-            support_frequency: "one_time",
-            support_details: null,
-            laptop_quantity: null,
-            motorbike_quantity: null,
-            components_quantity: 1,
-            tuition_amount: null,
-            tuition_frequency: null,
-            support_end_date: null,
-            is_active: true,
-            notes: null,
-          },
-        });
-        donorId = newDonor.id;
-      }
-
-      // Create component
+      // Create component without donor_id (for components that need support)
       await createComponent.mutateAsync({
-        donor_id: donorId,
+        donor_id: null,
         student_id: null,
         component_type: values.component_type,
         brand: values.brand || null,
@@ -172,17 +103,14 @@ export function CreateComponentForm({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Thêm Linh kiện</DialogTitle>
+          <DialogTitle>Thêm Linh kiện cần hỗ trợ</DialogTitle>
           <DialogDescription>
-            Thêm linh kiện mới vào kho. Bạn có thể chọn nhà hảo tâm có sẵn hoặc tạo mới.
+            Nhập thông tin linh kiện cần được hỗ trợ. Thông tin nhà hảo tâm có thể được thêm sau khi linh kiện đã được hỗ trợ.
           </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Donor Selection */}
-            <DonorSelector supportType="components" />
-
             {/* Component Information */}
             <div className="space-y-4">
               <h4 className="font-medium">Thông tin linh kiện</h4>
@@ -285,6 +213,7 @@ export function CreateComponentForm({
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
+                          <SelectItem value="needs_support">Cần hỗ trợ</SelectItem>
                           <SelectItem value="available">Sẵn sàng</SelectItem>
                           <SelectItem value="assigned">Đã phân</SelectItem>
                           <SelectItem value="delivered">Đã giao</SelectItem>

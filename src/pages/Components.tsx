@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { CreateComponentForm } from "@/components/forms/CreateComponentForm";
+import { EditComponentForm } from "@/components/forms/EditComponentForm";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,6 +37,8 @@ import { format } from "date-fns";
 import { vi } from "date-fns/locale";
 
 const statusLabels: Record<string, string> = {
+  needs_support: "Cần hỗ trợ",
+  supported: "Đã được hỗ trợ",
   available: "Sẵn sàng",
   assigned: "Đã phân",
   delivered: "Đã giao",
@@ -43,6 +46,8 @@ const statusLabels: Record<string, string> = {
 };
 
 const statusColors: Record<string, "approved" | "pending" | "rejected"> = {
+  needs_support: "pending",
+  supported: "approved",
   available: "approved",
   assigned: "pending",
   delivered: "approved",
@@ -53,6 +58,8 @@ export default function Components() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [selectedComponentId, setSelectedComponentId] = useState<string | null>(null);
 
   const pagination = usePagination({ initialPageSize: 10 });
 
@@ -73,9 +80,9 @@ export default function Components() {
 
   const stats = [
     { label: "Tổng linh kiện", value: totalCount },
+    { label: "Cần hỗ trợ", value: components.filter(c => c.status === "needs_support").length },
+    { label: "Đã được hỗ trợ", value: components.filter(c => c.status === "supported").length },
     { label: "Sẵn sàng", value: components.filter(c => c.status === "available").length },
-    { label: "Đã phân", value: components.filter(c => c.status === "assigned").length },
-    { label: "Đã lắp", value: components.filter(c => c.status === "installed").length },
   ];
 
   return (
@@ -115,6 +122,8 @@ export default function Components() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Tất cả</SelectItem>
+              <SelectItem value="needs_support">Cần hỗ trợ</SelectItem>
+              <SelectItem value="supported">Đã được hỗ trợ</SelectItem>
               <SelectItem value="available">Sẵn sàng</SelectItem>
               <SelectItem value="assigned">Đã phân</SelectItem>
               <SelectItem value="delivered">Đã giao</SelectItem>
@@ -192,10 +201,12 @@ export default function Components() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
-                          <Eye className="mr-2 h-4 w-4" /> Xem chi tiết
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setSelectedComponentId(comp.id);
+                            setEditDialogOpen(true);
+                          }}
+                        >
                           <Edit className="mr-2 h-4 w-4" /> Chỉnh sửa
                         </DropdownMenuItem>
                         <DropdownMenuItem className="text-destructive">
@@ -228,6 +239,17 @@ export default function Components() {
       <CreateComponentForm
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
+      />
+
+      <EditComponentForm
+        open={editDialogOpen}
+        onOpenChange={(open) => {
+          setEditDialogOpen(open);
+          if (!open) {
+            setSelectedComponentId(null);
+          }
+        }}
+        componentId={selectedComponentId}
       />
     </MainLayout>
   );

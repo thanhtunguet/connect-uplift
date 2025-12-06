@@ -701,6 +701,37 @@ export function useComponents(filters: InventoryFilters = {}) {
   });
 }
 
+export function useComponent(id: string | null) {
+  return useQuery({
+    queryKey: ["component", id],
+    queryFn: async () => {
+      if (!id) return null;
+
+      const { data, error } = await supabase
+        .from("components")
+        .select(`
+          *,
+          donors:donor_id(full_name),
+          students:student_id(full_name)
+        `)
+        .eq("id", id)
+        .single();
+
+      if (error) {
+        console.error("Error fetching component:", error);
+        throw error;
+      }
+
+      return {
+        ...data,
+        donor_name: data.donors?.full_name || null,
+        student_name: data.students?.full_name || null,
+      } as ComponentData;
+    },
+    enabled: !!id,
+  });
+}
+
 export function useUpdateComponent() {
   const queryClient = useQueryClient();
 
@@ -725,6 +756,7 @@ export function useUpdateComponent() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["components"] });
+      queryClient.invalidateQueries({ queryKey: ["component"] });
       toast.success("Cập nhật linh kiện thành công");
     },
     onError: (error) => {
