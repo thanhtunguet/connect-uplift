@@ -42,6 +42,7 @@ const formSchema = z
     donor_phone: z.string().optional(),
     donor_address: z.string().optional(),
     donor_facebook_link: z.string().optional(),
+    donor_area_id: z.string().optional(),
     donor_tuition_frequency: z.nativeEnum(SupportFrequency).optional(),
 
     // Tuition information
@@ -79,6 +80,13 @@ const formSchema = z
           path: ["donor_address"],
         });
       }
+      if (!data.donor_area_id || data.donor_area_id.trim() === "") {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Vui lòng chọn khu vực nhà hảo tâm",
+          path: ["donor_area_id"],
+        });
+      }
     }
   });
 
@@ -105,6 +113,7 @@ export function CreateTuitionForm({
       donor_phone: "",
       donor_address: "",
       donor_facebook_link: "",
+      donor_area_id: "",
       donor_tuition_frequency: SupportFrequency.ONE_TIME,
       amount: 1000000,
       frequency: SupportFrequency.ONE_TIME,
@@ -132,6 +141,7 @@ export function CreateTuitionForm({
             phone: values.donor_phone!,
             address: values.donor_address!,
             facebook_link: values.donor_facebook_link || null,
+            area_id: values.donor_area_id || null,
             support_types: ["tuition"],
             support_frequency: values.donor_tuition_frequency || SupportFrequency.ONE_TIME,
             support_details: null,

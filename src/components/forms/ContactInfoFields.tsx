@@ -9,14 +9,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useAreas } from "@/hooks/useAreas";
+import { AreaSelect } from "./AreaSelect";
 
 interface ContactInfoFieldsProps {
   control: Control<any>;
@@ -34,8 +27,6 @@ export function ContactInfoFields({
   areaDescription = "Chọn khu vực của bạn để dễ dàng kết nối với sinh viên cùng địa bàn",
   phonePlaceholder = "Cần thiết để liên lạc",
 }: ContactInfoFieldsProps) {
-  const { data: areasResult, isLoading: isLoadingAreas } = useAreas({ isActive: true });
-  const areas = areasResult?.data ?? [];
 
   return (
     <div className="space-y-4">
@@ -128,30 +119,13 @@ export function ContactInfoFields({
         render={({ field }) => (
           <FormItem>
             <FormLabel>Khu vực *</FormLabel>
-            <Select onValueChange={field.onChange} value={field.value || undefined}>
-              <FormControl>
-                <SelectTrigger>
-                  <SelectValue placeholder="Chọn khu vực..." />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent>
-                {isLoadingAreas ? (
-                  <SelectItem value="loading" disabled>
-                    Đang tải...
-                  </SelectItem>
-                ) : areas.length === 0 ? (
-                  <SelectItem value="empty" disabled>
-                    Không có khu vực nào
-                  </SelectItem>
-                ) : (
-                  areas.map((area) => (
-                    <SelectItem key={area.id} value={area.id}>
-                      {area.name}
-                    </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
+            <FormControl>
+              <AreaSelect
+                value={field.value || undefined}
+                onValueChange={field.onChange}
+                placeholder="Chọn khu vực..."
+              />
+            </FormControl>
             <FormDescription>{areaDescription}</FormDescription>
             <FormMessage />
           </FormItem>

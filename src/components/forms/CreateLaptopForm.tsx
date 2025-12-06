@@ -42,6 +42,7 @@ const formSchema = z
     donor_phone: z.string().optional(),
     donor_address: z.string().optional(),
     donor_facebook_link: z.string().optional(),
+    donor_area_id: z.string().optional(),
 
     // Laptop information
     brand: z.string().min(1, "Vui lòng nhập hãng laptop"),
@@ -77,6 +78,13 @@ const formSchema = z
           path: ["donor_address"],
         });
       }
+      if (!data.donor_area_id || data.donor_area_id.trim() === "") {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Vui lòng chọn khu vực nhà hảo tâm",
+          path: ["donor_area_id"],
+        });
+      }
     }
   });
 
@@ -100,6 +108,7 @@ export function CreateLaptopForm({ open, onOpenChange }: CreateLaptopFormProps) 
       donor_phone: "",
       donor_address: "",
       donor_facebook_link: "",
+      donor_area_id: "",
       brand: "",
       model: "",
       specifications: "",
@@ -125,6 +134,7 @@ export function CreateLaptopForm({ open, onOpenChange }: CreateLaptopFormProps) 
             phone: values.donor_phone!,
             address: values.donor_address!,
             facebook_link: values.donor_facebook_link || null,
+            area_id: values.donor_area_id || null,
             support_types: ["laptop"],
             support_frequency: "one_time",
             support_details: null,

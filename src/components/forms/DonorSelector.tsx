@@ -8,20 +8,13 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useDonors } from "@/hooks/useDonors";
-import { useAreas } from "@/hooks/useAreas";
 import { Label } from "@/components/ui/label";
 import { SupportFrequency } from "@/enums";
+import { AreaSelect } from "./AreaSelect";
 
 interface DonorSelectorProps {
   supportType: "laptop" | "motorbike" | "components" | "tuition";
@@ -32,7 +25,6 @@ export function DonorSelector({ supportType }: DonorSelectorProps) {
   const [donorMode, setDonorMode] = useState<"existing" | "new">("existing");
   
   const { data: donorsResult, isLoading } = useDonors({ isActive: true });
-  const { data: areas = [], isLoading: isLoadingAreas } = useAreas({ isActive: true });
 
   // Filter donors based on support type
   const donors = donorsResult?.data ?? [];
@@ -186,33 +178,13 @@ export function DonorSelector({ supportType }: DonorSelectorProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Khu vực *</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  value={field.value ?? ""}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Chọn khu vực..." />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {isLoadingAreas ? (
-                      <SelectItem value="loading" disabled>
-                        Đang tải...
-                      </SelectItem>
-                    ) : areas.length === 0 ? (
-                      <SelectItem value="empty" disabled>
-                        Không có khu vực nào
-                      </SelectItem>
-                    ) : (
-                      areas.map((area) => (
-                        <SelectItem key={area.id} value={area.id}>
-                          {area.name}
-                        </SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
+                <FormControl>
+                  <AreaSelect
+                    value={field.value || undefined}
+                    onValueChange={field.onChange}
+                    placeholder="Chọn khu vực..."
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}

@@ -9,6 +9,7 @@ export interface DonorData {
   phone: string;
   address: string;
   facebook_link: string | null;
+  area_id: string | null;
   support_types: string[];
   support_frequency: string;
   support_details: string | null;
