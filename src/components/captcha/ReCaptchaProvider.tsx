@@ -1,5 +1,4 @@
-import { useEffect, useState, createContext, useContext, ReactNode } from "react";
-import type { JSX } from "react";
+import React, { useEffect, useState, createContext, useContext, ReactNode, useCallback } from "react";
 
 interface ReCaptchaContextType {
   executeRecaptcha: (action: string) => Promise<string | null>;
@@ -71,7 +70,7 @@ export function ReCaptchaProvider({ children, siteKey }: ReCaptchaProviderProps)
     };
   }, [siteKey]);
 
-  const executeRecaptcha = async (action: string): Promise<string | null> => {
+  const executeRecaptcha = useCallback(async (action: string): Promise<string | null> => {
     // If site key is not provided, return null (for development)
     if (!siteKey || siteKey.trim() === "") {
       return null;
@@ -89,13 +88,13 @@ export function ReCaptchaProvider({ children, siteKey }: ReCaptchaProviderProps)
       console.error("Error executing reCAPTCHA:", error);
       return null;
     }
-  };
+  }, [siteKey, isReady]);
 
   return (
     <ReCaptchaContext.Provider value={{ executeRecaptcha, isReady }}>
       {children}
     </ReCaptchaContext.Provider>
-  ) as JSX.Element;
+  );
 }
 
 export function useReCaptcha() {
