@@ -659,7 +659,7 @@ export function useComponents(filters: InventoryFilters = {}) {
           *,
           donors:donor_id(full_name),
           students:student_id(full_name),
-          support_registration:support_registration_id(full_name, phone)
+          donor_applications:support_registration_id(full_name, phone)
         `)
         .order("component_code", { ascending: false, nullsLast: true });
 
@@ -696,13 +696,68 @@ export function useComponents(filters: InventoryFilters = {}) {
         throw error;
       }
 
-      const transformedData = data.map((component: any) => ({
-        ...component,
-        donor_name: component.donors?.full_name || null,
-        student_name: component.students?.full_name || null,
-        supporter_name: component.support_registration?.full_name || null,
-        supporter_phone: component.support_registration?.phone || null,
-      })) as ComponentData[];
+      // Get all support_registration_ids that are not null
+      const supportRegistrationIds = data
+        .filter((comp: any) => comp.support_registration_id)
+        .map((comp: any) => comp.support_registration_id);
+
+      // Fetch supporter information separately if needed
+      let supporterMap: Record<string, { full_name: string; phone: string }> = {};
+      
+      if (supportRegistrationIds.length > 0) {
+        // Try to get from nested query first
+        const componentsWithSupport = data.filter((comp: any) => {
+          const supportApp = comp.donor_applications;
+          return supportApp && (Array.isArray(supportApp) ? supportApp.length > 0 : true);
+        });
+
+        // If nested query worked, use it
+        componentsWithSupport.forEach((comp: any) => {
+          const supportApp = comp.donor_applications;
+          const supporterInfo = Array.isArray(supportApp) ? supportApp[0] : supportApp;
+          if (supporterInfo && comp.support_registration_id) {
+            supporterMap[comp.support_registration_id] = {
+              full_name: supporterInfo.full_name,
+              phone: supporterInfo.phone,
+            };
+          }
+        });
+
+        // For components without nested data, query separately
+        const missingIds = supportRegistrationIds.filter(
+          (id: string) => !supporterMap[id]
+        );
+
+        if (missingIds.length > 0) {
+          const { data: supporterData, error: supporterError } = await supabase
+            .from("donor_applications")
+            .select("id, full_name, phone")
+            .in("id", missingIds);
+
+          if (!supporterError && supporterData) {
+            supporterData.forEach((app: any) => {
+              supporterMap[app.id] = {
+                full_name: app.full_name,
+                phone: app.phone,
+              };
+            });
+          }
+        }
+      }
+
+      const transformedData = data.map((component: any) => {
+        const supporterInfo = component.support_registration_id
+          ? supporterMap[component.support_registration_id]
+          : null;
+        
+        return {
+          ...component,
+          donor_name: component.donors?.full_name || null,
+          student_name: component.students?.full_name || null,
+          supporter_name: supporterInfo?.full_name || null,
+          supporter_phone: supporterInfo?.phone || null,
+        };
+      }) as ComponentData[];
 
       const totalCount = count || 0;
       const totalPages = Math.ceil(totalCount / pageSize);
@@ -727,7 +782,8 @@ export function useComponent(id: string | null) {
         .select(`
           *,
           donors:donor_id(full_name),
-          students:student_id(full_name)
+          students:student_id(full_name),
+          donor_applications:support_registration_id(full_name, phone)
         `)
         .eq("id", id)
         .single();
@@ -737,10 +793,18 @@ export function useComponent(id: string | null) {
         throw error;
       }
 
+      // Handle donor_applications - it might be an object or array
+      const supportApp = data.donor_applications;
+      const supporterInfo = Array.isArray(supportApp) 
+        ? supportApp[0] 
+        : supportApp;
+
       return {
         ...data,
         donor_name: data.donors?.full_name || null,
         student_name: data.students?.full_name || null,
+        supporter_name: supporterInfo?.full_name || null,
+        supporter_phone: supporterInfo?.phone || null,
       } as ComponentData;
     },
     enabled: !!id,
