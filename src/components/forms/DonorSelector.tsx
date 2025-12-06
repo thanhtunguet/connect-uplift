@@ -31,10 +31,11 @@ export function DonorSelector({ supportType }: DonorSelectorProps) {
   const form = useFormContext();
   const [donorMode, setDonorMode] = useState<"existing" | "new">("existing");
   
-  const { data: donors = [], isLoading } = useDonors({ isActive: true });
+  const { data: donorsResult, isLoading } = useDonors({ isActive: true });
   const { data: areas = [], isLoading: isLoadingAreas } = useAreas({ isActive: true });
 
   // Filter donors based on support type
+  const donors = donorsResult?.data ?? [];
   const filteredDonors = donors.filter((donor) =>
     donor.support_types.includes(supportType)
   );
@@ -84,7 +85,7 @@ export function DonorSelector({ supportType }: DonorSelectorProps) {
               <FormLabel>Chọn nhà hảo tâm</FormLabel>
               <Select
                 onValueChange={field.onChange}
-                value={field.value || undefined}
+                value={field.value ?? ""}
               >
                 <FormControl>
                   <SelectTrigger>
@@ -207,7 +208,7 @@ export function DonorSelector({ supportType }: DonorSelectorProps) {
                 <FormLabel>Khu vực *</FormLabel>
                 <Select
                   onValueChange={field.onChange}
-                  value={field.value || undefined}
+                  value={field.value ?? ""}
                 >
                   <FormControl>
                     <SelectTrigger>
@@ -247,7 +248,7 @@ export function DonorSelector({ supportType }: DonorSelectorProps) {
                     <FormLabel>Tần suất hỗ trợ</FormLabel>
                     <Select
                       onValueChange={field.onChange}
-                      value={field.value || undefined}
+                      value={field.value ?? ""}
                     >
                       <FormControl>
                         <SelectTrigger>
