@@ -51,6 +51,7 @@ import {
   academicYearLabels,
   supportTypeLabels 
 } from "@/enums";
+import { getStudentCode } from "@/lib/utils";
 
 export default function Students() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -273,6 +274,7 @@ export default function Students() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>Mã sinh viên</TableHead>
                 <TableHead>Họ và tên</TableHead>
                 <TableHead>Số điện thoại</TableHead>
                 <TableHead>Năm học</TableHead>
@@ -287,6 +289,9 @@ export default function Students() {
                 const receivedStatus = getStudentReceivedStatus(student);
                 return (
                   <TableRow key={student.id}>
+                    <TableCell className="font-mono font-semibold text-primary">
+                      {getStudentCode(student.id, student.birth_year, student.academic_year, student.area_id)}
+                    </TableCell>
                     <TableCell className="font-medium">{student.full_name}</TableCell>
                     <TableCell>{student.phone}</TableCell>
                     <TableCell>

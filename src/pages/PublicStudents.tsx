@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { StudentSupportForm } from "@/components/forms/StudentSupportForm";
 import { ReCaptchaProvider } from "@/components/captcha/ReCaptchaProvider";
 import { useAreas } from "@/hooks/useAreas";
+import { getStudentCode } from "@/lib/utils";
 import {
   Select,
   SelectContent,
@@ -250,8 +251,8 @@ export default function PublicStudents() {
                             <CardTitle className="text-lg font-bold">
                               Sinh viên cần hỗ trợ
                             </CardTitle>
-                            <CardDescription className="text-sm mt-1">
-                              ID: {student.id.substring(0, 8)}...
+                            <CardDescription className="text-sm mt-1 font-mono font-semibold text-primary">
+                              Mã: {getStudentCode(student.id, student.birth_year, student.academic_year, student.area_id)}
                             </CardDescription>
                           </div>
                         </div>
@@ -260,6 +261,13 @@ export default function PublicStudents() {
                       <CardContent className="flex-1 flex flex-col space-y-3">
                         {/* Basic Info */}
                         <div className="space-y-2">
+                          {student.area_name && (
+                            <div className="flex items-center gap-2 text-sm bg-primary/5 px-2 py-1.5 rounded-md border border-primary/10">
+                              <MapPin className="h-4 w-4 text-primary" />
+                              <span className="text-muted-foreground">Khu vực:</span>
+                              <span className="font-semibold text-primary">{student.area_name}</span>
+                            </div>
+                          )}
                           <div className="flex items-center gap-2 text-sm">
                             <Calendar className="h-4 w-4 text-muted-foreground" />
                             <span className="text-muted-foreground">Năm sinh:</span>
@@ -272,13 +280,6 @@ export default function PublicStudents() {
                               {academicYearLabels[student.academic_year] || student.academic_year}
                             </span>
                           </div>
-                          {student.area_name && (
-                            <div className="flex items-center gap-2 text-sm">
-                              <MapPin className="h-4 w-4 text-muted-foreground" />
-                              <span className="text-muted-foreground">Khu vực:</span>
-                              <span className="font-medium">{student.area_name}</span>
-                            </div>
-                          )}
                         </div>
 
                         {/* Difficult Situation */}

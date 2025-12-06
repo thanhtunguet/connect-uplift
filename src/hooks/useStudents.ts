@@ -5,6 +5,7 @@ import { toast } from "sonner";
 export interface StudentData {
   id: string;
   application_id: string | null;
+  area_id: string | null;
   full_name: string;
   birth_year: number;
   phone: string;
