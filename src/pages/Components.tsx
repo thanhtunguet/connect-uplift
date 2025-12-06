@@ -163,6 +163,7 @@ export default function Components() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>Mã</TableHead>
                 <TableHead>Loại</TableHead>
                 <TableHead>Hãng</TableHead>
                 <TableHead>Model</TableHead>
@@ -177,6 +178,9 @@ export default function Components() {
             <TableBody>
               {components.map((comp) => (
                 <TableRow key={comp.id}>
+                  <TableCell className="font-bold text-primary">
+                    {comp.component_code || "-"}
+                  </TableCell>
                   <TableCell className="font-medium">{comp.component_type}</TableCell>
                   <TableCell>{comp.brand || "Chưa cập nhật"}</TableCell>
                   <TableCell>{comp.model || "Chưa cập nhật"}</TableCell>

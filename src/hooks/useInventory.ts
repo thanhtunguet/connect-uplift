@@ -576,6 +576,7 @@ export function useCreateMotorbike() {
 
 export interface ComponentData {
   id: string;
+  component_code: number | null;
   donor_id: string | null;
   student_id: string | null;
   component_type: string;
@@ -651,7 +652,7 @@ export function useComponents(filters: InventoryFilters = {}) {
           donors:donor_id(full_name),
           students:student_id(full_name)
         `)
-        .order("created_at", { ascending: false });
+        .order("component_code", { ascending: false, nullsLast: true });
 
       // Apply status filter
       if (filters.status && filters.status !== "all") {
@@ -805,6 +806,7 @@ export function useCreateComponent() {
 // Public hook for fetching components that need support (no sensitive info)
 interface PublicComponentData {
   id: string;
+  component_code: number | null;
   component_type: string;
   brand: string | null;
   model: string | null;
@@ -863,9 +865,9 @@ export function usePublicComponents(filters: { search?: string; page?: number; p
       // Get the actual data with pagination (only public fields)
       let query = supabase
         .from("components")
-        .select("id, component_type, brand, model, specifications, condition, notes, purchase_link, delivery_address, delivery_phone, status, received_date, created_at")
+        .select("id, component_code, component_type, brand, model, specifications, condition, notes, purchase_link, delivery_address, delivery_phone, status, received_date, created_at")
         .eq("status", "needs_support")
-        .order("created_at", { ascending: false });
+        .order("component_code", { ascending: false, nullsLast: true });
 
       // Apply search filter
       if (filters.search && filters.search.trim()) {
@@ -908,6 +910,7 @@ export function usePublicComponents(filters: { search?: string; page?: number; p
 
       const transformedData = (data || []).map((component: any) => ({
         id: component.id,
+        component_code: component.component_code,
         component_type: component.component_type,
         brand: component.brand,
         model: component.model,

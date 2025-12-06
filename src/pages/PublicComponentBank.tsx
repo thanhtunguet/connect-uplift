@@ -33,8 +33,9 @@ export default function PublicComponentBank() {
   const totalCount = componentsResult?.totalCount || 0;
   const totalPages = componentsResult?.totalPages || 0;
 
-  const handleCopyId = (id: string) => {
-    navigator.clipboard.writeText(id);
+  const handleCopyCode = (code: number | null, id: string) => {
+    const codeToCopy = code?.toString() || id;
+    navigator.clipboard.writeText(codeToCopy);
     setCopiedId(id);
     toast.success("Đã sao chép mã linh kiện!");
     setTimeout(() => setCopiedId(null), 2000);
@@ -167,30 +168,32 @@ export default function PublicComponentBank() {
                         </div>
                       </div>
                       
-                      {/* Component ID - In đậm và rõ ràng */}
+                      {/* Component Code - In đậm và rõ ràng */}
                       <div className="mt-3 p-2 bg-primary/10 rounded-md border border-primary/20">
                         <div className="flex items-center justify-between gap-2">
                           <div className="flex-1">
                             <p className="text-xs font-medium text-muted-foreground mb-1">
                               Mã linh kiện:
                             </p>
-                            <p className="text-base font-bold text-primary break-all">
-                              {component.id}
+                            <p className="text-2xl font-bold text-primary">
+                              {component.component_code || "Chưa có mã"}
                             </p>
                           </div>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 shrink-0"
-                            onClick={() => handleCopyId(component.id)}
-                            title="Sao chép mã linh kiện"
-                          >
-                            {copiedId === component.id ? (
-                              <CheckCircle2 className="h-4 w-4 text-green-500" />
-                            ) : (
-                              <Copy className="h-4 w-4" />
-                            )}
-                          </Button>
+                          {component.component_code && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 shrink-0"
+                              onClick={() => handleCopyCode(component.component_code, component.id)}
+                              title="Sao chép mã linh kiện"
+                            >
+                              {copiedId === component.id ? (
+                                <CheckCircle2 className="h-4 w-4 text-green-500" />
+                              ) : (
+                                <Copy className="h-4 w-4" />
+                              )}
+                            </Button>
+                          )}
                         </div>
                       </div>
                     </CardHeader>
