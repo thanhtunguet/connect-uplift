@@ -38,9 +38,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Search, MoreHorizontal, Eye, Edit, Trash2, GraduationCap, AlertCircle, CheckCircle } from "lucide-react";
+import { Search, MoreHorizontal, Eye, Edit, Trash2, GraduationCap, AlertCircle, CheckCircle, Check } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StudentDetailDialog } from "@/components/students/StudentDetailDialog";
+import { MarkSupportDialog } from "@/components/students/MarkSupportDialog";
 import { useStudents, useMarkReceived, useDeleteStudent } from "@/hooks/useStudents";
 import { usePagination } from "@/hooks/usePagination";
 import { format } from "date-fns";
@@ -59,6 +60,7 @@ export default function Students() {
   const [needTypeFilter, setNeedTypeFilter] = useState<string>("all");
   const [receivedFilter, setReceivedFilter] = useState<"received" | "not_received" | "all">("all");
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [markSupportDialogOpen, setMarkSupportDialogOpen] = useState(false);
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [studentToDelete, setStudentToDelete] = useState<{ id: string; name: string } | null>(null);
@@ -121,9 +123,15 @@ export default function Students() {
   const handleMarkReceived = (
     id: string,
     type: "laptop" | "motorbike" | "tuition" | "components",
-    received: boolean
+    received: boolean,
+    note?: string
   ) => {
-    markReceivedMutation.mutate({ id, type, received });
+    markReceivedMutation.mutate({ id, type, received, note });
+  };
+
+  const handleOpenMarkSupportDialog = (id: string) => {
+    setSelectedStudentId(id);
+    setMarkSupportDialogOpen(true);
   };
 
   const handleDelete = (id: string, name: string) => {
@@ -317,6 +325,12 @@ export default function Students() {
                           <DropdownMenuItem onClick={() => handleViewDetails(student.id)}>
                             <Eye className="mr-2 h-4 w-4" /> Xem chi tiết
                           </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => handleOpenMarkSupportDialog(student.id)}
+                            disabled={markReceivedMutation.isPending || receivedStatus.status === "approved"}
+                          >
+                            <Check className="mr-2 h-4 w-4" /> Đánh dấu đã nhận hỗ trợ
+                          </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
                             className="text-destructive"
@@ -353,6 +367,15 @@ export default function Students() {
       <StudentDetailDialog
         open={detailDialogOpen}
         onOpenChange={setDetailDialogOpen}
+        student={selectedStudent}
+        onMarkReceived={handleMarkReceived}
+        isLoading={markReceivedMutation.isPending}
+      />
+
+      {/* Mark Support Dialog */}
+      <MarkSupportDialog
+        open={markSupportDialogOpen}
+        onOpenChange={setMarkSupportDialogOpen}
         student={selectedStudent}
         onMarkReceived={handleMarkReceived}
         isLoading={markReceivedMutation.isPending}

@@ -292,16 +292,41 @@ interface MarkReceivedParams {
   id: string;
   type: "laptop" | "motorbike" | "tuition" | "components";
   received: boolean;
+  note?: string;
 }
 
 export function useMarkReceived() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, type, received }: MarkReceivedParams) => {
+    mutationFn: async ({ id, type, received, note }: MarkReceivedParams) => {
       const updates: any = {
         updated_at: new Date().toISOString(),
       };
+
+      // Add note if provided
+      if (note && note.trim()) {
+        const existingNotes = await supabase
+          .from("students")
+          .select("notes")
+          .eq("id", id)
+          .single();
+
+        if (!existingNotes.error) {
+          const currentNotes = existingNotes.data?.notes || "";
+          const timestamp = new Date().toLocaleString("vi-VN", {
+            timeZone: "Asia/Ho_Chi_Minh",
+          });
+          const typeText = {
+            laptop: "Laptop",
+            motorbike: "Xe máy", 
+            tuition: "Học phí",
+            components: "Linh kiện",
+          }[type];
+          const newNote = `[${timestamp}] ${typeText} - ${note.trim()}`;
+          updates.notes = currentNotes ? `${currentNotes}\n${newNote}` : newNote;
+        }
+      }
 
       switch (type) {
         case "laptop":
