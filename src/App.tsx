@@ -48,7 +48,7 @@ const RootLayout = () => (
   </AppProviders>
 );
 
-export const publicRoutes: RouteRecord[] = [
+const publicBaseRoutes: RouteRecord[] = [
   { path: "/", element: <PublicHome /> },
   { path: "/dang-ky-nha-hao-tam", element: <PublicDonorRegistration /> },
   { path: "/dang-ky-sinh-vien", element: <PublicStudentRegistration /> },
@@ -57,6 +57,16 @@ export const publicRoutes: RouteRecord[] = [
   { path: "/danh-sach-sinh-vien", element: <PublicStudents /> },
   { path: "/auth", element: <Auth /> },
 ];
+
+const withHtmlAlias = (route: RouteRecord): RouteRecord[] => {
+  if (route.path === "/") {
+    return [route, { ...route, path: "/index.html" }];
+  }
+  return [route, { ...route, path: `${route.path}.html` }];
+};
+
+export const publicRoutes: RouteRecord[] =
+  publicBaseRoutes.flatMap(withHtmlAlias);
 
 const protectedRoutes: RouteRecord[] = [
   {
@@ -84,7 +94,7 @@ const protectedRoutes: RouteRecord[] = [
     ),
   },
   {
-    path: "/sinh-vien",
+    path: "/danh-sach-sinh-vien",
     element: (
       <ProtectedRoute>
         <Students />
