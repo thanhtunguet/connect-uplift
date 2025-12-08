@@ -33,3 +33,4 @@ mkdirSync(publicDir, { recursive: true });
 writeFileSync(path.join(publicDir, "sitemap.xml"), xml, "utf-8");
 console.log(`Sitemap generated with ${routes.length} routes at public/sitemap.xml`);
 
+
