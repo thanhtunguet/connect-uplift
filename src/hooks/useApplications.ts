@@ -103,7 +103,30 @@ export function useDonorApplications(filters: ApplicationFilters = {}) {
       // Now get the actual data with pagination
       let query = supabase
         .from("donor_applications")
-        .select("*")
+        .select(`
+          id,
+          full_name,
+          phone,
+          address,
+          facebook_link,
+          area_id,
+          support_types,
+          support_details,
+          laptop_quantity,
+          laptop_images,
+          motorbike_quantity,
+          motorbike_images,
+          components_quantity,
+          tuition_amount,
+          tuition_frequency,
+          status,
+          rejection_reason,
+          notes,
+          reviewed_at,
+          reviewed_by,
+          created_at,
+          updated_at
+        `)
         .order("created_at", { ascending: false });
 
       // Apply status filter
@@ -231,7 +254,14 @@ export function useUpdateApplicationStatus() {
     mutationFn: async ({ id, status, rejectionReason, notes, type }: UpdateApplicationStatusParams) => {
       const table = type === "donor" ? "donor_applications" : "student_applications";
       
-      const updateData: any = {
+      const updateData: {
+        status: ApplicationStatus;
+        reviewed_at: string;
+        updated_at: string;
+        rejection_reason?: string;
+        notes?: string;
+        reviewed_by?: string;
+      } = {
         status,
         reviewed_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -365,12 +395,21 @@ export function useUpdateApplicationStatus() {
             }
           }
 
-          // Create motorbike records
+          // Create motorbike records with image linking
           if (applicationData.support_types.includes('motorbike') && applicationData.motorbike_quantity) {
-            for (let i = 0; i < applicationData.motorbike_quantity; i++) {
+            const motorbikeImages = applicationData.motorbike_images || [];
+            const motorbikeCount = applicationData.motorbike_quantity;
+
+            for (let i = 0; i < motorbikeCount; i++) {
+              // Phân phối ảnh: mỗi xe máy nhận 1 ảnh, nếu ảnh ít hơn xe máy thì lặp lại hoặc để null
+              const imageUrl = motorbikeImages.length > 0
+                ? motorbikeImages[i % motorbikeImages.length]
+                : null;
+
               await supabase.from("motorbikes").insert({
                 donor_id: donorId,
-                status: 'available', 
+                status: 'available',
+                image_url: imageUrl,
                 notes: `Từ nhà hảo tâm: ${applicationData.full_name}`,
               });
             }
@@ -510,7 +549,30 @@ export function useDonorApplication(id: string | null) {
 
       const { data, error } = await supabase
         .from("donor_applications")
-        .select("*")
+        .select(`
+          id,
+          full_name,
+          phone,
+          address,
+          facebook_link,
+          area_id,
+          support_types,
+          support_details,
+          laptop_quantity,
+          laptop_images,
+          motorbike_quantity,
+          motorbike_images,
+          components_quantity,
+          tuition_amount,
+          tuition_frequency,
+          status,
+          rejection_reason,
+          notes,
+          reviewed_at,
+          reviewed_by,
+          created_at,
+          updated_at
+        `)
         .eq("id", id)
         .single();
 
