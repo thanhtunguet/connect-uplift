@@ -15,27 +15,35 @@ export function PublicHeader() {
 
   const navigationLinks = [
     {
-      href: "/ngan-hang-laptop",
+      href: "/ngan-hang-laptop.html",
       label: "Ngân hàng laptop",
       icon: Laptop,
     },
     {
-      href: "/ngan-hang-linh-kien",
+      href: "/ngan-hang-linh-kien.html",
       label: "Linh kiện cần hỗ trợ",
       icon: Wrench,
     },
     {
-      href: "/danh-sach-sinh-vien",
+      href: "/danh-sach-sinh-vien.html",
       label: "Danh sách sinh viên",
       icon: GraduationCap,
     },
   ];
 
+  const isActive = (href: string) => {
+    const withoutHtml = href.replace(/\.html$/, "");
+    return location.pathname === href || location.pathname === withoutHtml;
+  };
+
   return (
     <header className="sticky top-0 z-30 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between px-4 md:px-6">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+        <Link
+          to="/index.html"
+          className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+        >
           <Laptop className="h-6 w-6" />
           <h1 className="text-xl font-bold">Ăn mày laptop</h1>
         </Link>
@@ -44,12 +52,12 @@ export function PublicHeader() {
         <nav className="hidden lg:flex items-center gap-2">
           {navigationLinks.map((link) => {
             const Icon = link.icon;
-            const isActive = location.pathname === link.href;
+            const active = isActive(link.href);
             return (
               <Button
                 key={link.href}
                 asChild
-                variant={isActive ? "secondary" : "ghost"}
+                variant={active ? "secondary" : "ghost"}
                 size="sm"
                 className="h-9"
               >
@@ -78,12 +86,12 @@ export function PublicHeader() {
                 <DropdownMenuSeparator />
                 {navigationLinks.map((link) => {
                   const Icon = link.icon;
-                  const isActive = location.pathname === link.href;
+                  const active = isActive(link.href);
                   return (
                     <DropdownMenuItem
                       key={link.href}
                       asChild
-                      className={isActive ? "bg-secondary" : ""}
+                      className={active ? "bg-secondary" : ""}
                     >
                       <Link to={link.href} className="flex items-center">
                         <Icon className="mr-2 h-4 w-4" />
@@ -97,8 +105,12 @@ export function PublicHeader() {
           </div>
 
           {/* Admin Login Button */}
-          <Link to="/auth">
-            <Button variant="ghost" size="sm" className="h-9 text-xs md:text-sm">
+          <Link to="/auth.html">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-9 text-xs md:text-sm"
+            >
               <span className="hidden sm:inline">Đăng nhập</span>
               <span className="sm:hidden">Đăng nhập</span>
               <span className="hidden md:inline ml-1">(Admin)</span>

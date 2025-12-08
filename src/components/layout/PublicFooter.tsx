@@ -1,25 +1,32 @@
 import { Link } from "react-router-dom";
-import { Laptop, Wrench, GraduationCap, Home, Heart, UserPlus } from "lucide-react";
+import {
+  Laptop,
+  Wrench,
+  GraduationCap,
+  Home,
+  Heart,
+  UserPlus,
+} from "lucide-react";
 
 export function PublicFooter() {
   const navigationLinks = [
     {
-      href: "/",
+      href: "/index.html",
       label: "Trang chủ",
       icon: Home,
     },
     {
-      href: "/ngan-hang-laptop",
+      href: "/ngan-hang-laptop.html",
       label: "Ngân hàng laptop",
       icon: Laptop,
     },
     {
-      href: "/ngan-hang-linh-kien",
+      href: "/ngan-hang-linh-kien.html",
       label: "Linh kiện cần hỗ trợ",
       icon: Wrench,
     },
     {
-      href: "/danh-sach-sinh-vien",
+      href: "/danh-sach-sinh-vien.html",
       label: "Danh sách sinh viên",
       icon: GraduationCap,
     },
@@ -27,12 +34,12 @@ export function PublicFooter() {
 
   const registrationLinks = [
     {
-      href: "/dang-ky-nha-hao-tam",
+      href: "/dang-ky-nha-hao-tam.html",
       label: "Đăng ký nhà hảo tâm",
       icon: Heart,
     },
     {
-      href: "/dang-ky-sinh-vien",
+      href: "/dang-ky-sinh-vien.html",
       label: "Đăng ký sinh viên",
       icon: UserPlus,
     },
@@ -86,8 +93,9 @@ export function PublicFooter() {
           <div>
             <h3 className="font-semibold mb-4 text-foreground">Về dự án</h3>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Dự án "Ăn mày laptop" kết nối các nhà hảo tâm với sinh viên có hoàn cảnh khó khăn,
-              hỗ trợ laptop, xe máy, linh kiện và học phí để các em có thể tiếp tục con đường học vấn.
+              Dự án "Ăn mày laptop" kết nối các nhà hảo tâm với sinh viên có
+              hoàn cảnh khó khăn, hỗ trợ laptop, xe máy, linh kiện và học phí để
+              các em có thể tiếp tục con đường học vấn.
             </p>
           </div>
         </div>

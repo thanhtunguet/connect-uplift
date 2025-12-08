@@ -60,9 +60,9 @@ const publicBaseRoutes: RouteRecord[] = [
 
 const withHtmlAlias = (route: RouteRecord): RouteRecord[] => {
   if (route.path === "/") {
-    return [route, { ...route, path: "/index" }];
+    return [route, { ...route, path: "/index.html" }];
   }
-  return [route, { ...route, path: `${route.path}` }];
+  return [route, { ...route, path: `${route.path}.html` }];
 };
 
 export const publicRoutes: RouteRecord[] =
@@ -94,7 +94,7 @@ const protectedRoutes: RouteRecord[] = [
     ),
   },
   {
-    path: "/danh-sach-sinh-vien",
+    path: "/sinh-vien",
     element: (
       <ProtectedRoute>
         <Students />

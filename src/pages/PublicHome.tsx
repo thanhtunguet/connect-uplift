@@ -83,7 +83,7 @@ export default function PublicHome() {
                   <span> Minh bạch, công khai trên Facebook </span>
                 </p>
               </div>
-              <Link to="/dang-ky-nha-hao-tam" className="block">
+              <Link to="/dang-ky-nha-hao-tam.html" className="block">
                 <Button className="w-full" size="lg">
                   Đăng ký nhà hảo tâm
                   <ArrowRight className="ml-2 h-4 w-4" />
@@ -124,7 +124,7 @@ export default function PublicHome() {
                   <span> Cố gắng học tập tốt </span>
                 </p>
               </div>
-              <Link to="/dang-ky-sinh-vien" className="block">
+              <Link to="/dang-ky-sinh-vien.html" className="block">
                 <Button className="w-full" size="lg" variant="outline">
                   Đăng ký sinh viên
                   <ArrowRight className="ml-2 h-4 w-4" />
@@ -170,7 +170,7 @@ export default function PublicHome() {
                   </span>
                 </p>
               </div>
-              <Link to="/ngan-hang-laptop" className="block">
+              <Link to="/ngan-hang-laptop.html" className="block">
                 <Button className="w-full" size="lg" variant="default">
                   Xem ngân hàng laptop
                   <ArrowRight className="ml-2 h-4 w-4" />
@@ -216,7 +216,7 @@ export default function PublicHome() {
                   <span> Link đặt hàng và thông tin nhận hàng sẵn có </span>
                 </p>
               </div>
-              <Link to="/ngan-hang-linh-kien" className="block">
+              <Link to="/ngan-hang-linh-kien.html" className="block">
                 <Button className="w-full" size="lg" variant="default">
                   Xem Linh kiện cần hỗ trợ
                   <ArrowRight className="ml-2 h-4 w-4" />
@@ -264,7 +264,7 @@ export default function PublicHome() {
                   <span> Đăng ký hỗ trợ trực tiếp với reCAPTCHA bảo vệ </span>
                 </p>
               </div>
-              <Link to="/danh-sach-sinh-vien" className="block">
+              <Link to="/danh-sach-sinh-vien.html" className="block">
                 <Button className="w-full" size="lg" variant="default">
                   Xem danh sách sinh viên
                   <ArrowRight className="ml-2 h-4 w-4" />
