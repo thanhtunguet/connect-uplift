@@ -12,13 +12,11 @@ interface MainLayoutProps {
 export function MainLayout({ children, title, description }: MainLayoutProps) {
   return (
     <SidebarProvider>
-    <AppSidebar />
-    <SidebarInset>
-    <Header title= { title } description = { description } />
-      <main className="flex-1 p-6 overflow-x-hidden">
-        { children }
-        </main>
-        </SidebarInset>
-        </SidebarProvider>
+      <AppSidebar />
+      <SidebarInset>
+        <Header title={title} description={description} />
+        <main className="flex-1 min-w-0 p-6 overflow-x-hidden">{children}</main>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }
