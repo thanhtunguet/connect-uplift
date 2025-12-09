@@ -226,7 +226,7 @@ export default function Reports() {
 
             <Card className="animate-fade-in" style={{ animationDelay: "100ms" }}>
               <CardHeader>
-                <CardTitle>Phân bố hỗ trợ đã hoàn thành</CardTitle>
+                <CardTitle>Phân bố hỗ trợ</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="h-[300px]">

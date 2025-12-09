@@ -146,25 +146,25 @@ export function useReportsData() {
         supabase
           .from("laptops")
           .select("id, student_id, status, assigned_date, delivered_date, updated_at")
-          .gte("updated_at", sixMonthsAgo.toISOString())
+          .or(`assigned_date.gte.${sixMonthsAgo.toISOString()},delivered_date.gte.${sixMonthsAgo.toISOString()},updated_at.gte.${sixMonthsAgo.toISOString()}`)
           .order("updated_at", { ascending: false })
           .limit(1000),
         supabase
           .from("motorbikes")
           .select("id, student_id, status, assigned_date, delivered_date, updated_at")
-          .gte("updated_at", sixMonthsAgo.toISOString())
+          .or(`assigned_date.gte.${sixMonthsAgo.toISOString()},delivered_date.gte.${sixMonthsAgo.toISOString()},updated_at.gte.${sixMonthsAgo.toISOString()}`)
           .order("updated_at", { ascending: false })
           .limit(1000),
         supabase
           .from("components")
           .select("id, student_id, status, assigned_date, delivered_date, updated_at")
-          .gte("updated_at", sixMonthsAgo.toISOString())
+          .or(`assigned_date.gte.${sixMonthsAgo.toISOString()},delivered_date.gte.${sixMonthsAgo.toISOString()},updated_at.gte.${sixMonthsAgo.toISOString()}`)
           .order("updated_at", { ascending: false })
           .limit(1000),
         supabase
           .from("tuition_support")
           .select("id, student_id, amount, status, pledged_date, paid_date, start_date, updated_at")
-          .gte("updated_at", sixMonthsAgo.toISOString())
+          .or(`pledged_date.gte.${sixMonthsAgo.toISOString()},paid_date.gte.${sixMonthsAgo.toISOString()},start_date.gte.${sixMonthsAgo.toISOString()},updated_at.gte.${sixMonthsAgo.toISOString()}`)
           .order("updated_at", { ascending: false })
           .limit(1000),
         supabase
@@ -325,11 +325,12 @@ export function useReportsData() {
         (laptop: {
           status: string;
           delivered_date: string | null;
+          assigned_date: string | null;
           updated_at: string | null;
           student_id?: string | null;
         }) => {
-          if (laptop.status !== "delivered") return;
-          const eventDate = resolveDate(laptop.delivered_date, laptop.updated_at);
+          if (!["assigned", "delivered"].includes(laptop.status)) return;
+          const eventDate = resolveDate(laptop.delivered_date, laptop.assigned_date, laptop.updated_at);
           registerSupportEvent({ date: eventDate, type: "laptop", studentId: laptop.student_id ?? null });
           incrementWeeklyBucket(eventDate, "laptops");
         }
@@ -339,11 +340,12 @@ export function useReportsData() {
         (motorbike: {
           status: string;
           delivered_date: string | null;
+          assigned_date: string | null;
           updated_at: string | null;
           student_id?: string | null;
         }) => {
-          if (motorbike.status !== "delivered") return;
-          const eventDate = resolveDate(motorbike.delivered_date, motorbike.updated_at);
+          if (!["assigned", "delivered"].includes(motorbike.status)) return;
+          const eventDate = resolveDate(motorbike.delivered_date, motorbike.assigned_date, motorbike.updated_at);
           registerSupportEvent({ date: eventDate, type: "motorbike", studentId: motorbike.student_id ?? null });
           incrementWeeklyBucket(eventDate, "motorbikes");
         }
@@ -357,7 +359,7 @@ export function useReportsData() {
           updated_at: string | null;
           student_id?: string | null;
         }) => {
-          if (!["delivered", "installed"].includes(component.status)) return;
+          if (!["assigned", "delivered", "installed"].includes(component.status)) return;
           const eventDate = resolveDate(component.delivered_date, component.assigned_date, component.updated_at);
           registerSupportEvent({ date: eventDate, type: "components", studentId: component.student_id ?? null });
         }
@@ -367,13 +369,14 @@ export function useReportsData() {
         (tuitionRecord: {
           status: string;
           paid_date: string | null;
+          pledged_date: string | null;
           start_date: string | null;
           updated_at: string | null;
           student_id?: string | null;
           amount: number | string | null;
         }) => {
-          if (!["paid", "completed"].includes(tuitionRecord.status)) return;
-          const eventDate = resolveDate(tuitionRecord.paid_date, tuitionRecord.start_date, tuitionRecord.updated_at);
+          if (!["pledged", "paid", "completed"].includes(tuitionRecord.status)) return;
+          const eventDate = resolveDate(tuitionRecord.paid_date, tuitionRecord.pledged_date, tuitionRecord.start_date, tuitionRecord.updated_at);
           const amount = Number(tuitionRecord.amount) || 0;
           registerSupportEvent({
             date: eventDate,
