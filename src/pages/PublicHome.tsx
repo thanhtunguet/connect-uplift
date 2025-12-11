@@ -284,7 +284,7 @@ export default function PublicHome() {
               style={{ aspectRatio: "1020/256" }}
             >
               <img
-                src="https://scontent.fhan14-1.fna.fbcdn.net/v/t39.30808-6/561346745_10163260236397768_958191264658348908_n.jpg?_nc_cat=101&ccb=1-7&_nc_sid=cc71e4&_nc_eui2=AeEaVM4IpZBcMOirO4faNEcLOSLcOo0O6ng5Itw6jQ7qeE7GiJo-4Ko46i1pCqDNTTFiWWj-aUVKsPzD8cvgEgM9&_nc_ohc=GzLIqXAcOxYQ7kNvwGR9ix5&_nc_oc=AdnPFBDOl-PxMtMqQ6ISJ8iXYAXxjIVfnw3rRdvVRXqZWs7o17ym4Dp0UJb4rpXEXl8L49l7Q5dlVsNdOcZwWSWz&_nc_zt=23&_nc_ht=scontent.fhan14-1.fna&_nc_gid=2zD_33yDjceuhg7VrjK0jA&oh=00_AflU8zlr_Z_L3V01REUKrvexSzfoBsK2VcRrD2CAHKQVTQ&oe=69390232"
+                src="/images/cover-picture.jpg"
                 alt="Nguyên tắc hoạt động dự án"
                 className="w-full h-full object-cover"
               />
@@ -346,7 +346,7 @@ export default function PublicHome() {
               <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-center md:items-start">
                 <div className="flex-shrink-0">
                   <img
-                    src="https://scontent.fhan14-2.fna.fbcdn.net/v/t39.30808-6/415498574_10161009318992768_4314971227842060491_n.jpg?_nc_cat=1&ccb=1-7&_nc_sid=6ee11a&_nc_eui2=AeFldh3qoDvV53kpwQRG_R3yk75oTM2i-N6TvmhMzaL43sNaql1GfVHaVQY4L7ZbmZtcvBQ97ISqXlGpXxuiOStD&_nc_ohc=kaanxJhIvD4Q7kNvwExrXRN&_nc_oc=Adnlq_gBG8ap7w9Ety7vh33rsmdYUB47nwdPbahaf8XEUPu8uMvJZGx0rsMONYEkh0PaJLoNwCANEn3vIAJz7cy5&_nc_zt=23&_nc_ht=scontent.fhan14-2.fna&_nc_gid=p1MyqXbtyn81zCtKp-2vvw&oh=00_AfkX_usPANIZpFRC6yiulxfnJxg8QXhOiMsObGlVzrqFjg&oe=6938F0F2"
+                    src="/images/author-picture.jpg"
                     alt="Trần Trọng An"
                     className="w-32 h-32 md:w-40 md:h-40 rounded-full object-cover border-2 border-primary/20"
                   />
